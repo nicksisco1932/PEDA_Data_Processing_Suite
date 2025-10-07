@@ -1,13 +1,15 @@
+
 #!/usr/bin/env python3
 r"""
-master_run.py  (v2.2.0)
+master_run.py  (v2.3.1)
 
 Pipeline orchestrator:
   1) clean_tdc_data.py  (TDC)
   2) process_mri_package.py  (MRI)
-  3) anonymize local.db in-place (delegates to localdb_anon.py)
-  4) run_peda (simulate or real)
-  5) archive PEDAv output
+  3) normalize/move case PDF into <CASEID> Misc/<CASEID>_TreatmentReport.pdf
+  4) anonymize local.db in-place (delegates to localdb_anon.py)
+  5) run_peda (simulate or real)
+  6) archive PEDAv output
 
 Notes:
 - local.db anonymization now lives in localdb_anon.py
@@ -19,12 +21,99 @@ import argparse
 import logging
 import re
 import shutil
-import subprocess
-import sys
+import sys, os, subprocess
 import tempfile
 import zipfile
 from glob import iglob
 from pathlib import Path
+from typing import Optional, List
+import hashlib, json, time
+
+# -----------------------------------------------------------------------------
+# VENV BOOTSTRAP + DEPENDENCY RESOLVER (RELATIVE, CROSS-PLATFORM)
+# -----------------------------------------------------------------------------
+
+def _venv_python(venv_dir: Path) -> Path:
+    if os.name == "nt":
+        return venv_dir / "Scripts" / "python.exe"
+    return venv_dir / "bin" / "python"
+
+def _is_in_this_venv(venv_dir: Path) -> bool:
+    vpy = _venv_python(venv_dir).resolve()
+    return Path(sys.executable).resolve() == vpy or Path(sys.prefix).resolve() == venv_dir.resolve()
+
+def _create_venv(venv_dir: Path) -> None:
+    venv_dir.mkdir(parents=True, exist_ok=True)
+    subprocess.check_call([sys.executable, "-m", "venv", str(venv_dir)])
+
+def _pip_install(py: Path, args: list[str]) -> None:
+    subprocess.check_call([str(py), "-m", "pip"] + args)
+
+def _hash_files(paths: list[Path]) -> str:
+    h = hashlib.sha256()
+    for p in paths:
+        if p.exists():
+            h.update(p.name.encode())
+            h.update(b"\0")
+            h.update(p.read_bytes())
+            h.update(b"\0")
+    return h.hexdigest()
+
+def _ensure_dependencies(py: Path, repo_root: Path) -> None:
+    req = repo_root / "requirements.txt"
+    req_lock = repo_root / "requirements-lock.txt"
+    sentinel = repo_root / ".venv" / ".deps_hash.json"
+
+    # ensure pip exists inside venv
+    try:
+        subprocess.check_call([str(py), "-m", "ensurepip", "--upgrade"])
+    except Exception:
+        pass
+
+    os.environ.setdefault("PIP_DISABLE_PIP_VERSION_CHECK", "1")
+
+    files = [p for p in [req_lock, req] if p.exists()]
+    want = _hash_files(files)
+    if sentinel.exists():
+        try:
+            have = json.loads(sentinel.read_text()).get("hash")
+            if have == want:
+                return
+        except Exception:
+            pass
+
+    _pip_install(py, ["install", "--upgrade", "pip", "setuptools", "wheel"])
+    if req_lock.exists():
+        _pip_install(py, ["install", "-r", str(req_lock), "--upgrade-strategy", "only-if-needed"])
+    elif req.exists():
+        _pip_install(py, ["install", "-r", str(req), "--upgrade-strategy", "only-if-needed"])
+
+    try:
+        sentinel.write_text(json.dumps({"hash": want, "ts": int(time.time())}))
+    except Exception:
+        pass
+
+def _bootstrap_venv_and_deps() -> None:
+    repo_root = Path(__file__).resolve().parent
+    venv_dir = Path(os.environ.get("PEDA_VENV_DIR", repo_root / ".venv")).resolve()
+    vpy = _venv_python(venv_dir)
+
+    if not _is_in_this_venv(venv_dir):
+        if not vpy.exists():
+            print(f"[bootstrap] Creating venv at {venv_dir} ...")
+            _create_venv(venv_dir)
+        print(f"[bootstrap] Re-launching inside venv: {vpy}")
+        os.execv(str(vpy), [str(vpy)] + sys.argv)
+
+    try:
+        if os.environ.get("PEDA_NO_PIP", "0") != "1":
+            _ensure_dependencies(Path(sys.executable), repo_root)
+    except subprocess.CalledProcessError as e:
+        sys.stderr.write(f"\n[bootstrap] Dependency setup failed (pip exit {e.returncode}). Continuing.\n")
+        sys.stderr.write("Set PEDA_NO_PIP=1 to suppress future attempts.\n\n")
+
+_bootstrap_venv_and_deps()
+
 
 # Optional import: only needed if you actually run PEDA (not archive-only)
 try:
@@ -275,11 +364,139 @@ def find_local_db(case_dir: Path, norm_id: str) -> Path | None:
 
 
 # =============================
+# PDF handling (with parent search)
+# =============================
+
+_PDF_KEYWORDS = ["treatment", "report", "treatmentreport", "summary"]
+_PDF_EXT_RE = re.compile(r"(?i)\.pdf(?:\.pdf)+$")
+
+def _normalize_pdf_suffix(name: str) -> str:
+    """Collapse trailing .pdf.pdf… → .pdf and normalize case to .pdf."""
+    if _PDF_EXT_RE.search(name):
+        return _PDF_EXT_RE.sub(".pdf", name)
+    if name.lower().endswith(".pdf") and not name.endswith(".pdf"):
+        return name[:-4] + ".pdf"
+    return name
+
+def _score_pdf_candidate(p: Path, case_id: str) -> int:
+    """Heuristic: case_id match, keywords, shallow path; tiny penalty for long names."""
+    n = p.name.lower()
+    score = 0
+    if case_id.lower() in n:
+        score += 3
+    if any(k in n for k in _PDF_KEYWORDS):
+        score += 2
+    # Prefer shallow paths relative to drive root; bounded
+    score += max(0, 4 - len(p.parts))
+    score -= int(len(p.name) / 50)
+    return score
+
+def _find_all_pdfs_multi(case_dir: Path, case_id: str) -> List[Path]:
+    """
+    Search order:
+      1) Inside the case directory (recursive)
+      2) One level up (case_dir.parent), shallow, only files that contain the case id
+         or its swapped variant (e.g., 017_01-479 or 017-01_479)
+    """
+    results: List[Path] = []
+    # 1) Search inside the case dir
+    if case_dir.exists():
+        results += [p for p in case_dir.rglob("*") if p.is_file() and p.suffix.lower() == ".pdf"]
+
+    # 2) Shallow parent search
+    parent = case_dir.parent
+    if parent.exists():
+        swapped = make_swapped_variant(case_id) or ""
+        for p in parent.glob("*.pdf"):
+            n = p.name.lower()
+            if case_id.lower() in n or swapped.lower() in n:
+                results.append(p)
+    return results
+
+def _best_pdf(pdfs: List[Path], case_id: str) -> Optional[Path]:
+    if not pdfs:
+        return None
+    return sorted(
+        pdfs,
+        key=lambda p: (_score_pdf_candidate(p, case_id), p.stat().st_mtime),
+        reverse=True,
+    )[0]
+
+def handle_case_pdf(case_dir: Path, norm_id: str, logger: logging.Logger, dry_run: bool, dest_basename: str = "TreatmentReport") -> None:
+    """
+    Finds a case PDF (if any), normalizes extension, and moves it to:
+        <CASEID> Misc/<CASEID>_<dest_basename>.pdf
+    Includes parent-folder detection.
+    """
+    logger.info("PDF: Scanning case folder for PDFs")
+    logger.info("PDF: Also searching parent folder for case-matching PDFs")
+    pdfs = _find_all_pdfs_multi(case_dir, norm_id)
+    if not pdfs:
+        logger.info("PDF: None found; skipping")
+        return
+
+    cand = _best_pdf(pdfs, norm_id)
+    if not cand:
+        logger.info("PDF: No suitable candidate; skipping")
+        return
+
+    logger.info(f"PDF: Selected '{cand}'")
+
+    # Normalize extension (.pdf.pdf -> .pdf, .PDF -> .pdf)
+    fixed_name = _normalize_pdf_suffix(cand.name)
+    if fixed_name != cand.name:
+        logger.info(f"PDF: Normalizing extension '{cand.name}' → '{fixed_name}'")
+        if not dry_run:
+            try:
+                new_path = cand.with_name(fixed_name)
+                cand.rename(new_path)
+                cand = new_path
+            except Exception as e:
+                logger.warning(f"PDF: Rename failed ({e}); continuing with original")
+
+    # Destination
+    misc_dir = case_dir / f"{norm_id} Misc"
+    misc_dir.mkdir(parents=True, exist_ok=True)
+    dest = misc_dir / f"{norm_id}_{dest_basename}.pdf"
+    if dest.exists():
+        i = 2
+        while True:
+            alt = misc_dir / f"{norm_id}_{dest_basename}_{i}.pdf"
+            if not alt.exists():
+                dest = alt
+                break
+            i += 1
+    logger.info(f"PDF: → Target '{dest.name}'")
+
+    if dry_run:
+        logger.info("PDF: [DRY-RUN] Would move file")
+        return
+
+    try:
+        shutil.move(str(cand), str(dest))
+        logger.info(f"PDF: Moved to '{dest}'")
+    except Exception as e:
+        logger.error(f"PDF: Move failed ({e})")
+        return
+
+    # Only prune if source was inside the case folder
+    try:
+        if case_dir in cand.parents:
+            parent = cand.parent
+            while parent != case_dir and parent.exists() and not any(parent.iterdir()):
+                logger.info(f"PDF: Removing empty folder '{parent}'")
+                parent.rmdir()
+                parent = parent.parent
+    except Exception as e:
+        logger.debug(f"PDF: Prune skipped ({e})")
+
+
+# =============================
 # Main
 # =============================
 
 def main():
-    ap = argparse.ArgumentParser(description="TDC → MRI → local.db anonymize → PEDA → archive orchestrator.")
+    ap = argparse.ArgumentParser(description="TDC → MRI → PDF normalize → local.db anonymize → PEDA → archive orchestrator.")
 
     # Core
     ap.add_argument("case_dir", help="Case directory OR *_TDC.zip")
@@ -310,6 +527,8 @@ def main():
     ap.add_argument("--skip-tdc", action="store_true")
     ap.add_argument("--skip-mri", action="store_true")
     ap.add_argument("--skip-peda", action="store_true")
+    ap.add_argument("--skip-pdf", action="store_true", help="Skip case PDF detection/normalization")
+    ap.add_argument("--pdf-dest-name", default="TreatmentReport", help="Basename for normalized PDF (default: TreatmentReport)")
 
     # Logging
     ap.add_argument("--log-root", default=None)
@@ -398,6 +617,15 @@ def main():
                 if rc != 0: sys.exit(rc)
         else:
             logger.warning("process_mri_package.py not found")
+
+    # ---------------- PDF handling ----------------
+    if args.skip_pdf:
+        logger.info("PDF: Skipped by flag")
+    else:
+        try:
+            handle_case_pdf(case_dir=case_dir, norm_id=norm_id, logger=logger, dry_run=args.dry_run, dest_basename=args.pdf_dest_name)
+        except Exception as e:
+            logger.warning(f"PDF: Failed ({e}); continuing")
 
     # ---------------- local.db anonymization ----------------
     if args.anon_db:

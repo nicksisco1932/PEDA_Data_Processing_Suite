@@ -1,0 +1,61 @@
+# --- More Python tooling ---
+.python-version
+.ruff_cache/
+pyrightconfig.json
+.dmypy.json
+
+# --- Coverage & test artifacts ---
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+.junit/
+.tox/
+.pytest_cache/        # (already present, keep)
+.mypy_cache/          # (already present, keep)
+
+# --- Build / packaging misc ---
+.eggs/
+pip-wheel-metadata/
+*.manifest
+*.spec                 # pyinstaller specs (already listed once; ok to duplicate)
+
+# --- Local scripts & scratch (non-source) ---
+*_scratch.*            # e.g., foo_scratch.py / .ipynb / .txt
+scratch*/              # any scratch folders
+notes*/                # ad-hoc notes folders
+__drafts__/            # drafts, experiments
+
+# --- Windows / Office debris ---
+~$*                    # temp Office files
+*.lnk                  # Windows shortcuts
+
+# --- Graphics/binaries you likely don't want in git ---
+*.psd
+*.ai
+*.blend
+*.obj
+*.stl
+
+# --- More logs & temp ---
+*.bak.*                # chained backups
+*.rej                  # patch rejects
+*.orig                 # merge leftovers
+*.tmp.*                # extra temp suffixes
+profile_*.txt          # cProfile dumps, etc.
+
+# --- Local config overrides (keep the template, ignore actual) ---
+*.local.ini
+*.dev.ini
+*.secret.ini
+.env                   # if you ever use env files
+.env.*                 # per-environment variants
+
+# --- Project-specific: extra data/outputs (belt & suspenders) ---
+/tmp/
+/tmp/**/
+/list                  # looks like a generated helper file in your root
+**/DICOM/**            # raw DICOM folders if they appear with different casing
+**/MR DICOM/**         # already covered, keep both
+**/TDC Sessions/**     # already covered, keep both
