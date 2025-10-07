@@ -360,6 +360,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     ap.add_argument("--plan-json", type=str, help="Path to JSON mapping DICOM keywords → values")
     ap.add_argument("--skip-suffix", action="append", default=[], help="Additional filename suffix to skip (repeatable)")
     ap.add_argument("--csv-audit", action="store_true", help="Also write a CSV audit file alongside JSONL")
+    ap.add_argument("--simulate", action="store_true", help="Do not write changes; emit _sim_anondicom.txt in the site folder")
     return ap
 
 def main() -> None:
@@ -382,11 +383,17 @@ def main() -> None:
     plan_json = Path(args.plan_json).resolve() if args.plan_json else None
     skip_suffixes = DEFAULT_SKIP_SUFFIXES + list(args.skip_suffix or [])
 
+    # Simulation flag forces apply=False and writes a site-level marker
+    if args.simulate:
+        try:
+            (site_dir / "_sim_anondicom.txt").write_text("Simulated anonymize_dicom run.\n", encoding="utf-8")
+        except Exception:
+            pass
     code, audits = run_anonymize(
         site_id=site_id,
         birthdate=args.birthdate,
         site_dir=site_dir,
-        apply=args.apply,
+        apply=(False if args.simulate else args.apply),
         backup=args.backup,
         write_extras=args.write_extras,
         plan_json=plan_json,

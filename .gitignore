@@ -91,9 +91,8 @@ PEDA_dir_architecture.md
 # Optional anonymization or analysis utilities
 anonymize_dicom.py
 localdb_anon.py
-clean_tdc_data.py
 process_mri_package.py
-run_peda.py
+
 
 # Ignore .gitignore itself from re-adding
 !.gitignore

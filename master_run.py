@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 r"""
 master_run.py  (v2.3.1)
@@ -519,6 +518,7 @@ def main():
     ap.add_argument("--mri-dir", default=None)
     ap.add_argument("--patient-birthdate", default=None)
     ap.add_argument("--mri-apply", action="store_true")
+    ap.add_argument("--simulate-mri", action="store_true")
 
     # PEDA
     ap.add_argument("--peda-home", default=DEFAULT_PEDA_HOME)
@@ -528,6 +528,7 @@ def main():
 
     # Toggles
     ap.add_argument("--skip-tdc", action="store_true")
+    ap.add_argument("--simulate-tdc", action="store_true")
     ap.add_argument("--skip-mri", action="store_true")
     ap.add_argument("--skip-peda", action="store_true")
     ap.add_argument("--skip-pdf", action="store_true", help="Skip case PDF detection/normalization")
@@ -594,6 +595,8 @@ def main():
         if tdc.exists():
             tdc_input = Path(args.tdc_input).resolve() if args.tdc_input else _autodetect_tdc_input(raw_case, case_dir, norm_id)
             tdc_args = [str(case_dir), "--norm-id", norm_id, "--log-root", str(log_root)]
+            if args.simulate_tdc:
+                tdc_args.append("--simulate")
             if tdc_input:
                 tdc_args += ["--input", str(tdc_input)]
             if args.allow_id_mismatch:
@@ -616,6 +619,8 @@ def main():
             if mri_args is None:
                 logger.warning(f"MRI skipped: {reason}")
             else:
+                if args.simulate_mri:
+                    mri_args.append("--simulate")
                 rc = run_py(logger, mri, mri_args, args.dry_run)
                 if rc != 0: sys.exit(rc)
         else:
@@ -665,24 +670,31 @@ def main():
             if run_peda is None:
                 logger.warning("run_peda unavailable")
             else:
-                rc, plog = run_peda(case_dir=case_dir, peda_home=Path(args.peda_home),
-                                    matlab_exe=args.matlab_exe,
-                                    log_root=log_root,
-                                    simulate=True if args.simulate_peda else None,
-                                    force_matlab=args.force_matlab)
+                rc, plog = run_peda(
+                    case_dir=case_dir,
+                    peda_home=Path(args.peda_home),
+                    matlab_exe=args.matlab_exe,
+                    log_root=log_root,
+                    simulate=bool(args.simulate_peda),               # <- always a real bool
+                    force_matlab=args.force_matlab
+                )
                 logger.info(f"PEDA log {plog}")
                 if rc != 0: sys.exit(rc)
 
     # ---------------- Archive PEDAv ----------------
     if not args.no_archive:
         pedav = Path(args.peda_path).resolve() if args.peda_path else _find_latest_pedav_dir(case_dir)
-        if pedav and pedav.name.lower().endswith("-video"):
-            pedav = None
-        if pedav:
-            try:
-                _archive_pedav_dir(pedav, case_dir, norm_id, (args.peda_name or pedav.name), logger, clean=args.clean_peda)
-            except Exception as e:
-                logger.error(f"ARCHIVE failed {e}")
+        if args.simulate_peda and not pedav:
+            logger.info("ARCHIVE: Skipping (simulated run produced no PEDAv folder)")
+        else:
+            if pedav and pedav.name.lower().endswith("-video"):
+                pedav = None
+            if pedav:
+                try:
+                    _archive_pedav_dir(pedav, case_dir, norm_id, (args.peda_name or pedav.name), logger, clean=args.clean_peda)
+                except Exception as e:
+                    logger.error(f"ARCHIVE failed {e}")
+
 
     logger.info("==== MASTER COMPLETE ====")
     sys.exit(0)
