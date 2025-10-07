@@ -422,27 +422,39 @@ def _best_pdf(pdfs: List[Path], case_id: str) -> Optional[Path]:
         reverse=True,
     )[0]
 
-def handle_case_pdf(case_dir: Path, norm_id: str, logger: logging.Logger, dry_run: bool, dest_basename: str = "TreatmentReport") -> None:
+def handle_case_pdf(
+    case_dir: Path,
+    norm_id: str,
+    logger: logging.Logger,
+    dry_run: bool,
+    dest_basename: str = "TreatmentReport",
+    explicit_pdf: Optional[str] = None,
+) -> None:
     """
-    Finds a case PDF (if any), normalizes extension, and moves it to:
+    Finds or uses an explicit case PDF, normalizes extension, and moves it to:
         <CASEID> Misc/<CASEID>_<dest_basename>.pdf
-    Includes parent-folder detection.
     """
-    logger.info("PDF: Scanning case folder for PDFs")
-    logger.info("PDF: Also searching parent folder for case-matching PDFs")
-    pdfs = _find_all_pdfs_multi(case_dir, norm_id)
-    if not pdfs:
-        logger.info("PDF: None found; skipping")
-        return
+    # --- Explicit PDF path provided ---
+    if explicit_pdf:
+        cand = Path(explicit_pdf).resolve()
+        if not cand.exists():
+            logger.warning(f"PDF: Explicit path not found: {cand}")
+            return
+        logger.info(f"PDF: Using explicit file '{cand}'")
+        pdfs = [cand]
+    else:
+        logger.info("PDF: Scanning case folder and parent for PDFs")
+        pdfs = _find_all_pdfs_multi(case_dir, norm_id)
+        if not pdfs:
+            logger.info("PDF: None found; skipping")
+            return
+        cand = _best_pdf(pdfs, norm_id)
+        if not cand:
+            logger.info("PDF: No suitable candidate; skipping")
+            return
+        logger.info(f"PDF: Selected '{cand}'")
 
-    cand = _best_pdf(pdfs, norm_id)
-    if not cand:
-        logger.info("PDF: No suitable candidate; skipping")
-        return
-
-    logger.info(f"PDF: Selected '{cand}'")
-
-    # Normalize extension (.pdf.pdf -> .pdf, .PDF -> .pdf)
+    # --- Normalize extension (.pdf.pdf -> .pdf, .PDF -> .pdf) ---
     fixed_name = _normalize_pdf_suffix(cand.name)
     if fixed_name != cand.name:
         logger.info(f"PDF: Normalizing extension '{cand.name}' → '{fixed_name}'")
@@ -454,7 +466,7 @@ def handle_case_pdf(case_dir: Path, norm_id: str, logger: logging.Logger, dry_ru
             except Exception as e:
                 logger.warning(f"PDF: Rename failed ({e}); continuing with original")
 
-    # Destination
+    # --- Destination ---
     misc_dir = case_dir / f"{norm_id} Misc"
     misc_dir.mkdir(parents=True, exist_ok=True)
     dest = misc_dir / f"{norm_id}_{dest_basename}.pdf"
@@ -477,18 +489,7 @@ def handle_case_pdf(case_dir: Path, norm_id: str, logger: logging.Logger, dry_ru
         logger.info(f"PDF: Moved to '{dest}'")
     except Exception as e:
         logger.error(f"PDF: Move failed ({e})")
-        return
 
-    # Only prune if source was inside the case folder
-    try:
-        if case_dir in cand.parents:
-            parent = cand.parent
-            while parent != case_dir and parent.exists() and not any(parent.iterdir()):
-                logger.info(f"PDF: Removing empty folder '{parent}'")
-                parent.rmdir()
-                parent = parent.parent
-    except Exception as e:
-        logger.debug(f"PDF: Prune skipped ({e})")
 
 
 # =============================
@@ -502,6 +503,8 @@ def main():
     ap.add_argument("case_dir", help="Case directory OR *_TDC.zip")
     ap.add_argument("--out-root", default=None)
     ap.add_argument("--allow-id-mismatch", action="store_true")
+
+    ap.add_argument("--pdf-input", default=None, help="Explicit path to case PDF (overrides search)")
 
     # Archive-only
     ap.add_argument("--archive-only", action="store_true")
@@ -623,7 +626,7 @@ def main():
         logger.info("PDF: Skipped by flag")
     else:
         try:
-            handle_case_pdf(case_dir=case_dir, norm_id=norm_id, logger=logger, dry_run=args.dry_run, dest_basename=args.pdf_dest_name)
+            handle_case_pdf(case_dir=case_dir, norm_id=norm_id, logger=logger, dry_run=args.dry_run, dest_basename=args.pdf_dest_name, explicit_pdf=args.pdf_input)
         except Exception as e:
             logger.warning(f"PDF: Failed ({e}); continuing")
 

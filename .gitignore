@@ -59,3 +59,41 @@ profile_*.txt          # cProfile dumps, etc.
 **/DICOM/**            # raw DICOM folders if they appear with different casing
 **/MR DICOM/**         # already covered, keep both
 **/TDC Sessions/**     # already covered, keep both
+
+# ==========================================================
+# 🧩 Local dev, test, and redundant scripts (not tracked)
+# ==========================================================
+
+# Legacy / redundant versions
+master_run_orig2.0.py
+handle_case_pdf.py
+
+# GUI or experimental interfaces
+gui_main.py
+
+# Standalone tests and scratch scripts
+test_1.py
+test_2.py
+Basic_name_test.py
+list
+cmd/
+tmp/
+
+# Docs and markdown tests
+NOTES.md
+Test_process_mri_package_cmd.md
+CMD_ano_py.md
+
+# Project configuration / architecture notes
+PEDA_dir_architecture.ini
+PEDA_dir_architecture.md
+
+# Optional anonymization or analysis utilities
+anonymize_dicom.py
+localdb_anon.py
+clean_tdc_data.py
+process_mri_package.py
+run_peda.py
+
+# Ignore .gitignore itself from re-adding
+!.gitignore

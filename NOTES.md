@@ -41,3 +41,13 @@ python master_run.py "C:\Users\nicks\Desktop\WORK_Delete_boring\Database_project
   --out-root "C:\Users\nicks\Desktop\WORK_Delete_boring\Data_Clean" `
   --simulate-peda `
   --peda-path "C:\Users\nicks\Desktop\WORK_Delete_boring\PEDAv9.1.3"
+
+# WITH PDF
+python master_run.py "C:\Users\nicks\Desktop\WORK_Delete_boring\Database_project\test_data\test_data\017-01_479_TDC.zip" `
+  --mri-input "C:\Users\nicks\Desktop\WORK_Delete_boring\Database_project\test_data\test_data\MRI-017-01_479.zip" `
+  --pdf-input "C:\Users\nicks\Desktop\WORK_Delete_boring\Database_project\test_data\test_data\017-01_479_TreatmentReport.pdf.pdf" `
+  --patient-birthdate 19000101 `
+  --mri-apply `
+  --out-root "C:\Users\nicks\Desktop\WORK_Delete_boring\Data_Clean" `
+  --simulate-peda `
+  --peda-path "C:\Users\nicks\Desktop\WORK_Delete_boring\PEDAv9.1.3"
