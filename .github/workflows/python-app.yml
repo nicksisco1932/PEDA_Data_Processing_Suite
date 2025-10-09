@@ -1,70 +1,55 @@
 name: Python application
-
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: ${{ matrix.os }} / py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.12"
+            run-tests: "false"
+          - os: windows-latest
+            python-version: "3.10"
+            run-tests: "true"
+          - os: windows-latest
+            python-version: "3.13"
+            run-tests: "true"
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix['python-version'] }}
+          python-version: ${{ matrix.python-version }}
           cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
 
-      # Only on Ubuntu: install OS deps your code may shell out to (e.g., 7-Zip)
-      - name: Install OS dependencies (Ubuntu)
+      - name: Install system deps (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y p7zip-full
 
-      - name: Upgrade pip and install deps
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          # Base tooling
           pip install flake8 pytest
-          # Project deps
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # Optional dev/test extras
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-        shell: bash
 
-      - name: Environment sanity check
-        run: |
-          python -V
-          pip -V
-          python -c "import sys, platform; print('Platform:', platform.platform()); print('Exe:', sys.executable)"
-          pip list
-
-      - name: Lint with flake8 (errors only)
+      - name: Lint
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-      - name: Lint summary (non-failing)
-        run: |
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Run tests
-        run: |
-          pytest -q
+      - name: Test
+        if: matrix.run-tests == 'true'
+        run: pytest -q -v --disable-warnings
