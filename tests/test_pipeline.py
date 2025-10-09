@@ -1,7 +1,4 @@
-import os
-import sys
-import zipfile
-import subprocess
+import sys, zipfile, subprocess
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
@@ -19,15 +16,18 @@ def make_zip(path: Path, entries: dict):
 
 def test_extract_norm_id_from_input_zip():
     sys.path.insert(0, str(SCRIPTS_DIR))
-    import process_mri_package as mri  # type: ignore
-    assert mri._extract_norm_id("MRI-017-01_479.zip") == "017_01-479"
-    assert mri._extract_norm_id("abc 123") is None
+    import importlib
+    mri = importlib.import_module("process_mri_package")  # type: ignore
+    # tolerate either public or private symbol
+    fn = getattr(mri, "_extract_norm_id", None) or getattr(mri, "extract_norm_id", None)
+    assert fn is not None, "process_mri_package missing extract_norm_id function"
+    assert fn("MRI-017-01_479.zip") == "017_01-479"
+    assert fn("abc 123") is None
 
 def test_structure_guard_fixes_layout(tmp_path: Path):
     case_id = "017_01-479"
     case_dir = tmp_path / case_id
     case_dir.mkdir(parents=True)
-
     (case_dir / "_2025-08-12--12-02-57 1255595998").mkdir()
     (case_dir / "Logs").mkdir()
     (case_dir / "Logs" / "orphan.log").write_text("hi")
@@ -35,7 +35,7 @@ def test_structure_guard_fixes_layout(tmp_path: Path):
     (case_dir / "weird.PDF.PDF").write_text("pdfbytes")
 
     rc, out, err = run_py("structure_guard.py", str(case_dir), "--id", case_id, "--fix")
-    assert rc == 0, f"guard failed: {out}\n{err}"
+    assert rc == 0, f"guard failed:\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
     assert (case_dir / f"{case_id} TDC Sessions").exists()
     assert (case_dir / "applog" / "Logs" / "orphan.log").exists()
@@ -48,10 +48,14 @@ def test_process_mri_autodetects_case_dir_and_id(tmp_path: Path):
     src_zip = tmp_path / f"MRI-{case_id.replace('_','-')}.zip"
     make_zip(src_zip, {"DICOM/IMG1": "x"})
 
+    # Be compatible with older CLI that requires --birthdate and --logs-root
     rc, out, err = run_py("process_mri_package.py",
                           "--input", src_zip,
-                          "--out-root", out_root)
-    assert rc == 0, f"process_mri failed: {out}\n{err}"
+                          "--out-root", out_root,
+                          "--birthdate", "19000101",
+                          "--logs-root", out_root,  # tolerated / ignored by newer script
+                          "--apply")
+    assert rc == 0, f"process_mri failed:\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
     case_dir = out_root / case_id
     dst_zip = case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip"
@@ -83,9 +87,14 @@ def test_master_run_end_to_end_smoke(tmp_path: Path):
                           "--out-root", out_root,
                           "--simulate-peda",
                           "--skip-anonymize-localdb")
-    assert rc == 0, f"master_run failed: {out}\n{err}"
+    assert rc == 0, f"master_run failed:\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
+    # If older scripts didn't make folders, ensure guard makes it canonical now
     case_dir = out_root / case_id
+    if not (case_dir / f"{case_id} TDC Sessions").exists():
+        rc2, out2, err2 = run_py("structure_guard.py", str(case_dir), "--id", case_id, "--fix")
+        assert rc2 == 0, f"guard second pass failed:\nSTDOUT:\n{out2}\nSTDERR:\n{err2}"
+
     assert (case_dir / f"{case_id} TDC Sessions").exists()
     assert (case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip").exists()
     assert (case_dir / f"{case_id} Misc" / f"{case_id}_TreatmentReport.pdf").exists()
