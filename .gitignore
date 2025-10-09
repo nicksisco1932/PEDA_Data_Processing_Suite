@@ -78,6 +78,8 @@ Basic_name_test.py
 list
 cmd/
 tmp/
+testRes
+tests/
 
 # Docs and markdown tests
 NOTES.md
@@ -89,9 +91,7 @@ PEDA_dir_architecture.ini
 PEDA_dir_architecture.md
 
 # Optional anonymization or analysis utilities
-anonymize_dicom.py
-localdb_anon.py
-process_mri_package.py
+master_run_orig2.0.py
 
 
 # Ignore .gitignore itself from re-adding
