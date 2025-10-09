@@ -1,6 +1,8 @@
 # 📂 PEDA Data Proc — WORK
 
-![CI](https://github.com/<YOUR_ORG>/<YOUR_REPO>/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/nicksisco1932/PEDA_Data_Processing_Suite/tree/main/actions/workflows/ci.yml/badge.svg)
+
+
 
 End-to-end pipeline for **TDC session triage**, **MRI package normalization**, **PDF cleanup**, and **PEDA archiving** — all fully automated and structure-enforced.
 
