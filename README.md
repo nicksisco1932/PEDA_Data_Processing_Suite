@@ -1,5 +1,7 @@
 # 📂 PEDA Data Proc — WORK
 
+![CI](https://github.com/<YOUR_ORG>/<YOUR_REPO>/actions/workflows/ci.yml/badge.svg)
+
 End-to-end pipeline for **TDC session triage**, **MRI package normalization**, **PDF cleanup**, and **PEDA archiving** — all fully automated and structure-enforced.
 
 ---
@@ -170,3 +172,4 @@ GUARD: Final layout is canonical.
 
 ### v1.5.1 (2025-10-07)
 - `clean_tdc_data.py` merges Logs, moves stray session dirs, guarantees canonical folders
+
