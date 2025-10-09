@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# structure_guard.py  (v0.2)
-# Enforces canonical layout (no DICOM/ folder required; removes empty ones).
-
+# structure_guard.py (v0.2a ASCII)
 from __future__ import annotations
 import argparse, re, shutil, sys
 from pathlib import Path
@@ -19,45 +17,22 @@ def verify(case_root: Path, case_id: str) -> list[str]:
     tdc  = case_root / f"{case_id} TDC Sessions"
     applog = case_root / "applog"
     logs = applog / "Logs"
-
-    # Required dirs
     for d in [misc, mr, tdc, applog, logs]:
         if not d.exists():
             errs.append(f"MISSING: {d}")
-
-    # PDF
     pdf = misc / f"{case_id}_TreatmentReport.pdf"
     if not pdf.exists():
         found = list(misc.glob(f"{case_id}_TreatmentReport.pdf*"))
         if not found:
             errs.append(f"PDF not normalized: expected {pdf.name} in {misc}")
-
-    # MRI zip (required)
     if not (mr / f"{case_id}_MRI.zip").exists():
         errs.append(f"MRI zip missing: {mr / (case_id + '_MRI.zip')}")
-
-    # Remove empty DICOM dir if present
-    dcm = mr / "DICOM"
-    if dcm.exists():
-        try:
-            next(dcm.iterdir())
-        except StopIteration:
-            # empty
-            pass
-        else:
-            # non-empty DICOM is allowed, but not required
-            ...
-
-    # Session dirs should be under TDC Sessions
     stray_sessions = [p for p in case_root.iterdir() if p.is_dir() and SESSION_DIR_RE.match(p.name)]
     if stray_sessions:
-        errs.append(f"Stray session dirs at root: {', '.join(p.name for p in stray_sessions)}")
-
-    # Root 'Logs' at top level is not canonical
+        errs.append("Stray session dirs at root: " + ", ".join(p.name for p in stray_sessions))
     root_logs = case_root / "Logs"
     if root_logs.exists():
         errs.append("Root 'Logs' should be under applog/Logs")
-
     return errs
 
 def fix(case_root: Path, case_id: str) -> list[str]:
@@ -67,19 +42,13 @@ def fix(case_root: Path, case_id: str) -> list[str]:
     tdc  = _ensure_dir(case_root / f"{case_id} TDC Sessions")
     applog = _ensure_dir(case_root / "applog")
     logs = _ensure_dir(applog / "Logs")
-
-    # 1) Move stray session dirs into TDC Sessions
-    import re as _re
-    SESSION_DIR_RE = _re.compile(r"^_\d{4}-\d{2}-\d{2}--\d{2}-\d{2}-\d{2}\s+\d+$")
     for p in case_root.iterdir():
         if p.is_dir() and SESSION_DIR_RE.match(p.name):
             dest = tdc / p.name
             if dest.resolve() != p.resolve():
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.move(str(p), str(dest))
-                changes.append(f"MOVED session dir → {dest}")
-
-    # 2) Merge root 'Logs' into applog/Logs
+                changes.append(f"MOVED session dir -> {dest}")
     root_logs = case_root / "Logs"
     if root_logs.exists():
         for item in root_logs.rglob("*"):
@@ -93,11 +62,9 @@ def fix(case_root: Path, case_id: str) -> list[str]:
                     shutil.copy2(item, dst)
         try:
             shutil.rmtree(root_logs)
-            changes.append("MERGED root Logs → applog/Logs")
+            changes.append("MERGED root Logs -> applog/Logs")
         except Exception:
             pass
-
-    # 3) Normalize PDF name and location
     cand = None
     for p in case_root.rglob("*.pdf"):
         n = p.name.lower()
@@ -109,22 +76,18 @@ def fix(case_root: Path, case_id: str) -> list[str]:
         if not target.exists():
             try:
                 shutil.move(str(cand), str(target))
-                changes.append(f"MOVED PDF → {target}")
+                changes.append(f"MOVED PDF -> {target}")
             except Exception:
                 pass
-
-    # 4) Ensure MRI zip lives under MR DICOM
     for p in case_root.rglob(f"{case_id}_MRI.zip"):
         if p.parent.resolve() != mr.resolve():
             dst = mr / p.name
             dst.parent.mkdir(parents=True, exist_ok=True)
             try:
                 shutil.move(str(p), str(dst))
-                changes.append(f"MOVED MRI zip → {dst}")
+                changes.append(f"MOVED MRI zip -> {dst}")
             except Exception:
                 pass
-
-    # 5) Remove empty MR DICOM\DICOM
     dcm = mr / "DICOM"
     if dcm.exists():
         try:
@@ -135,7 +98,6 @@ def fix(case_root: Path, case_id: str) -> list[str]:
                 changes.append("REMOVED empty MR DICOM\\DICOM")
             except Exception:
                 pass
-
     return changes
 
 def main():
@@ -144,14 +106,13 @@ def main():
     ap.add_argument("--id", required=True)
     ap.add_argument("--fix", action="store_true")
     args = ap.parse_args()
-
     errs = verify(args.case_root, args.id)
     if errs:
-        print("❌ Layout issues detected:")
+        print("FAIL: Layout issues detected:")
         for e in errs:
             print(" -", e)
         if args.fix:
-            print("\nAttempting to fix...")
+            print("Attempting to fix...")
             changes = fix(args.case_root, args.id)
             if changes:
                 print("Applied changes:")
@@ -161,17 +122,17 @@ def main():
                 print("No changes applied.")
             errs2 = verify(args.case_root, args.id)
             if errs2:
-                print("\nRemaining issues:")
+                print("Remaining issues:")
                 for e in errs2:
                     print(" -", e)
                 sys.exit(1)
             else:
-                print("\n✅ Layout is now canonical.")
+                print("OK: Layout is now canonical.")
                 sys.exit(0)
         else:
             sys.exit(1)
     else:
-        print("✅ Layout is canonical.")
+        print("OK: Layout is canonical.")
         sys.exit(0)
 
 if __name__ == "__main__":
