@@ -1,31 +1,41 @@
 #!/usr/bin/env python3
 r"""
-run_peda.py  (v0.3.1)
+run_peda.py  (v0.4.0)
 
 Structure-aware PEDA runner/simulator.
 
-Required input layout:
-<OUT_ROOT>/
-  └─ <CASE>/                        # must match NNN_NN-NNN (e.g., 017_01-474)
-     ├─ <CASE> TDC Sessions/
-     └─ <CASE> MR DICOM/
+Accepted input layouts (both are valid):
+
+A) Nested case folder:
+<ROOT or OUTPUT>\<CASE>\
+  ├─ <CASE> TDC Sessions\
+  └─ <CASE> MR DICOM\
+
+B) Flat layout (canonical in your unified tree):
+<ROOT or OUTPUT>\
+  ├─ <CASE> TDC Sessions\
+  └─ <CASE> MR DICOM\
 
 Behaviors:
-- Validates the layout before running.
-- Real mode: calls MATLAB -batch "cd(PEDA); MAIN_PEDA('<CASE>')"
-- Simulation: ensures required subfolders exist, writes a PEDA-only marker
-  at the case root ("_sim_peda.txt"), and logs the simulated run.
-  (No files are written into TDC/MR directories in simulation mode.)
+- Validates the layout before running (works for A or B).
+- Real mode: calls MATLAB -batch "cd(PEDA); MAIN_PEDA('<INPUT_DIR>')"
+  where <INPUT_DIR> is exactly the directory you pass in (case_dir).
+- Simulation: DOES NOT create any directories. Writes a PEDA-only marker
+  at the provided input directory ("_sim_peda.txt") and logs the run.
+
+Notes:
+- If MATLAB is not found and not forced, we simulate.
+- If structure is invalid and --force-matlab is set, we return an error.
 """
 
 from __future__ import annotations
 import argparse, datetime, os, re, sys, subprocess
 from pathlib import Path
 
-DEFAULT_PEDA_HOME = os.environ.get("PEDA_HOME", r"C:\PEDA Apps\PEDA_v9.1.3\PEDA")
+# You can override via environment variable PEDA_HOME
+DEFAULT_PEDA_HOME = os.environ.get("PEDA_HOME", r"C:\Users\NicholasSisco\Local_apps\PEDA")
 
 CASE_NAME_RE = re.compile(r"^\d{3}_\d{2}-\d{3}$")
-
 REQ_TDC_SUFFIX = " TDC Sessions"
 REQ_DCM_SUFFIX = " MR DICOM"
 
@@ -40,7 +50,8 @@ def _find_matlab_exe(explicit: str|None) -> str|None:
     mr = os.environ.get("MATLAB_ROOT")
     if mr:
         cand = Path(mr) / "bin" / "matlab.exe"
-        if cand.exists(): return str(cand)
+        if cand.exists():
+            return str(cand)
     common = [
         r"C:\Program Files\MATLAB\R2025a\bin\matlab.exe",
         r"C:\Program Files\MATLAB\R2024b\bin\matlab.exe",
@@ -49,7 +60,8 @@ def _find_matlab_exe(explicit: str|None) -> str|None:
         r"C:\Program Files\MATLAB\R2023a\bin\matlab.exe",
     ]
     for p in common:
-        if Path(p).exists(): return p
+        if Path(p).exists():
+            return p
     return None  # not found
 
 def _timestamp() -> str:
@@ -60,40 +72,104 @@ def _write(path: Path, text: str) -> None:
     with open(path, "a", encoding="utf-8") as f:
         f.write(text)
 
-def _required_paths(case_dir: Path) -> tuple[Path, Path]:
-    case_name = case_dir.name
-    return (
-        case_dir / f"{case_name}{REQ_TDC_SUFFIX}",
-        case_dir / f"{case_name}{REQ_DCM_SUFFIX}",
-    )
+# ---------------- Structure resolution & validation ----------------
 
-def _validate_structure(case_dir: Path) -> tuple[bool, list[str]]:
+def _resolve_case_paths(case_dir: Path) -> tuple[str|None, Path, Path]:
+    """
+    Returns (case_name, tdc_path, dcm_path) for either layout:
+      A) Nested:  case_dir.name == CASE and case_dir/<CASE> TDC Sessions|MR DICOM
+      B) Flat:    case_dir contains <CASE> TDC Sessions|MR DICOM directly
+    If not resolvable, returns (None, candidate_tdc, candidate_dcm) where candidates
+    are what the nested paths *would* be for diagnostics.
+    """
+    case_dir = case_dir.resolve()
+    name = case_dir.name
+
+    # Try nested first
+    tdc_nested = case_dir / f"{name}{REQ_TDC_SUFFIX}"
+    dcm_nested = case_dir / f"{name}{REQ_DCM_SUFFIX}"
+    if tdc_nested.exists() or dcm_nested.exists():
+        # We accept "exists" because some users may only provide one; validation checks both.
+        return name, tdc_nested, dcm_nested
+
+    # Try flat: scan direct children and infer a consistent CASE ID
+    try:
+        kids = [p for p in case_dir.iterdir() if p.is_dir()]
+    except FileNotFoundError:
+        kids = []
+
+    candidates: dict[str, dict[str, Path]] = {}
+    for d in kids:
+        dn = d.name
+        if dn.endswith(REQ_TDC_SUFFIX):
+            cid = dn[: -len(REQ_TDC_SUFFIX)]
+            candidates.setdefault(cid, {})["tdc"] = d
+        elif dn.endswith(REQ_DCM_SUFFIX):
+            cid = dn[: -len(REQ_DCM_SUFFIX)]
+            candidates.setdefault(cid, {})["dcm"] = d
+
+    for cid, have in candidates.items():
+        if CASE_NAME_RE.match(cid) and "tdc" in have and "dcm" in have:
+            return cid, have["tdc"], have["dcm"]
+
+    # Nothing matched
+    return None, tdc_nested, dcm_nested
+
+def _validate_structure(case_dir: Path) -> tuple[bool, list[str], str|None, Path, Path]:
+    """
+    Validates presence of both required subfolders in either layout.
+    Returns: (ok, errs, case_name, tdc_path, dcm_path)
+    """
     errs: list[str] = []
     if not case_dir.is_dir():
         errs.append(f"Not a directory: {case_dir}")
-        return False, errs
-    case_name = case_dir.name
-    if not CASE_NAME_RE.match(case_name):
-        errs.append(f"Case folder name must match NNN_NN-NNN (e.g., 017_01-474); got: {case_name}")
-    tdc_path, dcm_path = _required_paths(case_dir)
+        return False, errs, None, case_dir, case_dir
+
+    case_name, tdc_path, dcm_path = _resolve_case_paths(case_dir)
+    if case_name is None:
+        errs.append(
+            "Could not find a valid case layout. Expected either:\n"
+            "  A) <...>\\<CASE>\\<CASE> TDC Sessions and <CASE> MR DICOM\n"
+            "  B) <...>\\<CASE> TDC Sessions and <CASE> MR DICOM"
+        )
+        return False, errs, None, tdc_path, dcm_path
+
     if not tdc_path.exists() or not tdc_path.is_dir():
         errs.append(f"Missing required subfolder: {tdc_path}")
     if not dcm_path.exists() or not dcm_path.is_dir():
         errs.append(f"Missing required subfolder: {dcm_path}")
-    return (len(errs) == 0), errs
+
+    ok = len(errs) == 0
+    return ok, errs, case_name, tdc_path, dcm_path
+
+# ---------------- Simulation & real run ----------------
 
 def _simulate(case_dir: Path, peda_home: Path, log_path: Path) -> tuple[int, Path]:
+    """
+    Simulation: do not create any directories.
+    Only writes a marker and a log entry describing the detected state.
+    """
     ts = _timestamp()
-    tdc_path, dcm_path = _required_paths(case_dir)
-    # Create required structure if missing
-    tdc_path.mkdir(parents=True, exist_ok=True)
-    dcm_path.mkdir(parents=True, exist_ok=True)
+    ok, errs, case_name, tdc_path, dcm_path = _validate_structure(case_dir)
 
-    # PEDA-only marker at the case root
+    # Marker (at the INPUT directory you passed)
     (case_dir / "_sim_peda.txt").write_text(
-        f"PEDA simulated run\nCASE   : {case_dir}\nPEDA   : {peda_home}\nTIME   : {ts}\n",
+        f"PEDA simulated run\nINPUT  : {case_dir}\nPEDA   : {peda_home}\nTIME   : {ts}\n",
         encoding="utf-8",
     )
+
+    if not ok:
+        _write(
+            log_path,
+            "-----------------------------------------\n"
+            "PEDA SIMULATION — INVALID STRUCTURE\n"
+            "-----------------------------------------\n"
+            f"INPUT : {case_dir}\n"
+            f"PEDA  : {peda_home}\n"
+            f"TIME  : {ts}\n"
+            "Errors:\n  - " + "\n  - ".join(errs) + "\n"
+        )
+        return 2, log_path
 
     _write(
         log_path,
@@ -102,9 +178,12 @@ def _simulate(case_dir: Path, peda_home: Path, log_path: Path) -> tuple[int, Pat
         "-----------------------------------------\n"
         f"INPUT : {case_dir}\n"
         f"PEDA  : {peda_home}\n"
+        f"CASE  : {case_name}\n"
+        f"TDC   : {tdc_path}\n"
+        f"MR    : {dcm_path}\n"
         f"LOG   : {log_path}\n"
         f"TIME  : {ts}\n"
-        "Result: SIMULATED OK (required structure ensured; no module placeholders written)\n"
+        "Result: SIMULATED OK (no directories created)\n"
     )
     return 0, log_path
 
@@ -132,14 +211,13 @@ def run_peda(
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"PEDA_{ts}.log"
 
-    # Decide simulation vs real
+    # If simulate is forced, do that immediately (but still log structure)
     if simulate is True:
         return _simulate(case_dir, peda_home, log_path)
 
-    # If we might run real MATLAB, validate structure FIRST
-    ok, errs = _validate_structure(case_dir)
+    # For real runs or simulate fallback, validate first
+    ok, errs, case_name, tdc_path, dcm_path = _validate_structure(case_dir)
     if not ok:
-        # If not sim and structure wrong, either fail (force_matlab) or simulate
         if force_matlab:
             _write(log_path, "ERROR: Required case structure invalid:\n  - " + "\n  - ".join(errs) + "\n")
             return 2, log_path
@@ -149,6 +227,8 @@ def run_peda(
     # Try to find MATLAB
     m_exe = _find_matlab_exe(matlab_exe)
     if m_exe is None:
+        # in run_peda.py, just before `return _simulate(...)` when m_exe is None
+        _write(log_path, "INFO: matlab.exe not found; falling back to SIMULATION (use --force-matlab to error)\n")
         if force_matlab:
             _write(log_path, f"ERROR: matlab.exe not found and --force-matlab set. No simulation fallback.\n")
             return 4, log_path
@@ -161,7 +241,8 @@ def run_peda(
         return 3, log_path
 
     peda_m = _norm_for_matlab(peda_home)
-    input_m = _norm_for_matlab(case_dir)
+    input_m = _norm_for_matlab(case_dir)   # pass EXACT directory provided (flat or nested)
+
     batch_cmd = f"cd('{peda_m}'); MAIN_PEDA('{input_m}')"
 
     header = (
@@ -171,6 +252,8 @@ def run_peda(
         f"MATLAB: {m_exe}\n"
         f"PEDA  : {peda_home}\n"
         f"INPUT : {case_dir}\n"
+        f"TDC   : {tdc_path}\n"
+        f"MR    : {dcm_path}\n"
         f"LOG   : {log_path}\n"
         f"TIME  : {ts}\n"
         "-----------------------------------------\n"
@@ -196,10 +279,10 @@ def run_peda(
 
 def _cli():
     ap = argparse.ArgumentParser(description="Run or simulate PEDA with required structure checks.")
-    ap.add_argument("case_dir")
+    ap.add_argument("case_dir", help="Directory that contains the two required folders (flat or nested layout).")
     ap.add_argument("--peda-home", default=DEFAULT_PEDA_HOME, help="Folder containing MAIN_PEDA.m")
     ap.add_argument("--matlab-exe", default=None, help="Full path to matlab.exe")
-    ap.add_argument("--log-root", default=None, help="Directory for logs; default is <case>\\applog\\Logs")
+    ap.add_argument("--log-root", default=None, help="Directory for logs; default is <input>\\applog\\Logs")
     ap.add_argument("--simulate", action="store_true", help="Force simulation (no MATLAB)")
     ap.add_argument("--force-matlab", action="store_true", help="Error if MATLAB not found OR structure invalid")
     args = ap.parse_args()
