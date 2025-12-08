@@ -155,3 +155,4 @@ venv/
 ENV/
 env/
 NS_PEDA/
+applog/
