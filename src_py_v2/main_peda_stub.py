@@ -137,58 +137,57 @@ def run_segment_stub(
                 print(f"    {key:26s} = {Sx[key]}")
 
     # ---- STEP 2: Thermal (CreateTMaxTDose_wrapper) ----
-    print("\n\tSTEP 2: Create TMax and TDose (stub)")
+    print("\n\tSTEP 2: Create TMax and TDose")
     try:
-        # This will currently raise NotImplementedError
         TMap, Mag, MaxT, Mask, TUV, TUVMag = CreateTMaxTDose_wrapper(Sx)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] CreateTMaxTDose_wrapper -> {exc}")
         TMap = Mag = MaxT = Mask = TUV = TUVMag = None
 
     # ---- STEP 3: Analyze hardware logs ----
-    print("\n\tSTEP 3: Analyze hardware logs (stub)")
+    print("\n\tSTEP 3: Analyze hardware logs")
     try:
         AnalyzeHardwareLogs(Sx)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] AnalyzeHardwareLogs -> {exc}")
 
     # ---- STEP 4: Create movies ----
-    print("\n\tSTEP 4: Create movies (stub)")
+    print("\n\tSTEP 4: Create movies")
     try:
         GenerateMovies(Sx, TMap, Mag, MaxT, TUV, TUVMag)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] GenerateMovies -> {exc}")
 
     # ---- STEP 5: Additional image masking ----
-    print("\n\tSTEP 5: Additional image masking (stub)")
+    print("\n\tSTEP 5: Additional image masking")
     try:
         AdditionalImageMasking(Sx, TMap)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] AdditionalImageMasking -> {exc}")
 
     # ---- STEP 6: Create isotherms ----
-    print("\n\tSTEP 6: Create isotherms (stub)")
+    print("\n\tSTEP 6: Create isotherms")
     try:
         CreateIsotherms(Sx)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] CreateIsotherms -> {exc}")
 
     # ---- STEP 7: Treatment controller statistics ----
-    print("\n\tSTEP 7: Treatment controller summary (stub)")
+    print("\n\tSTEP 7: Treatment controller summary")
     try:
         TreatmentControllerSummary(Sx)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] TreatmentControllerSummary -> {exc}")
 
     # ---- STEP 8: Segment statistics ----
-    print("\n\tSTEP 8: Segment statistics (stub)")
+    print("\n\tSTEP 8: Segment statistics")
     try:
         OutputStatistics(Sx)
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] OutputStatistics -> {exc}")
 
     # ---- STEP 9: Plot data ----
-    print("\n\tSTEP 9: Plot Tmax (stub)")
+    print("\n\tSTEP 9: Plot Tmax")
     try:
         PlotTmax(Sx)
     except NotImplementedError as exc:

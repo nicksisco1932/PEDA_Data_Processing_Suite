@@ -1,3 +1,4 @@
+# src_py_v2/CreateTMaxTDose.py
 """
 CreateTMaxTDose.py
 
@@ -286,8 +287,11 @@ def CreateTMaxTDose(
     except Exception as exc:  # pragma: no cover - IO
         _warn(f"ParseRawDataFolder failed: {exc}")
 
-    path_data = Path(TxParameters.get("pathData", session_dir / "output"))
+    path_data = Path(TxParameters.get("pathData", session_dir / "PEDA"))
     path_data.mkdir(parents=True, exist_ok=True)
+    # Ensure standard subfolders exist
+    for sub in ("HWAnalysis", "Movies", "ImageShift", "Masks", "TreatmentController"):
+        (path_data / sub).mkdir(parents=True, exist_ok=True)
     # Save controller tables if available
     for filename, name in [
         ("TreatmentControllerData.txt", "TreatmentControllerData"),
