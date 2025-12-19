@@ -154,9 +154,13 @@ def run_segment_stub(
     # ---- STEP 4: Create movies ----
     print("\n\tSTEP 4: Create movies")
     try:
+        print("GenerateMovies: start")
         GenerateMovies(Sx, TMap, Mag, MaxT, TUV, TUVMag)
+        print("GenerateMovies: done")
     except NotImplementedError as exc:
         print(f"\t[STUB HIT] GenerateMovies -> {exc}")
+    except Exception as exc:
+        print(f"GenerateMovies: failed: {exc!r}")
 
     # ---- STEP 5: Additional image masking ----
     print("\n\tSTEP 5: Additional image masking")
