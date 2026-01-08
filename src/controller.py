@@ -118,6 +118,7 @@ def main() -> int:
     add_bool_arg(parser, "skip_tdc", "Skip TDC step")
     add_bool_arg(parser, "dry_run", "Only validate and log planned actions")
     add_bool_arg(parser, "hash_outputs", "Compute SHA-256 hashes for outputs")
+    add_bool_arg(parser, "test_mode", "Fast test-mode (skip heavy steps)")
     args = parser.parse_args()
 
     cli_overrides = {
@@ -137,6 +138,7 @@ def main() -> int:
         "run_id": args.run_id,
         "dry_run": args.dry_run,
         "hash_outputs": args.hash_outputs,
+        "test_mode": args.test_mode,
     }
 
     try:
@@ -166,12 +168,14 @@ def main() -> int:
     date_shift_days: int = cfg["date_shift_days"]
     clean_scratch: bool = cfg["clean_scratch"]
     hash_outputs: bool = cfg["hash_outputs"]
+    test_mode: bool = cfg["test_mode"]
 
     logger, log_file, rich_available = init_logger(
         case=case, run_id=run_id, log_dir=log_dir, log_level=log_level
     )
     logger.info("Run start case=%s run_id=%s", case, run_id)
     logger.info("Dry run: %s", dry_run)
+    logger.info("Test mode: %s", test_mode)
     logger.info("Resolved inputs: mri=%s tdc=%s", cfg.get("mri_input"), cfg.get("tdc_input"))
     auto_info = cfg.get("auto_discovery") or {}
     for key in ("mri", "tdc"):
@@ -330,6 +334,7 @@ def main() -> int:
                         date_shift_days=date_shift_days,
                         logger=logger,
                         dry_run=False,
+                        test_mode=test_mode,
                         step_results=step_results,
                         status_mgr=status_mgr,
                     )
@@ -424,6 +429,7 @@ def main() -> int:
             "timestamp": datetime.now().isoformat(timespec="seconds"),
             "case": case,
             "status": status,
+            "test_mode": test_mode,
             "hostname": socket.gethostname(),
             "user": getpass.getuser(),
             "platform": platform.platform(),

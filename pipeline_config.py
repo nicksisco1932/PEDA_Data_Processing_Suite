@@ -42,6 +42,7 @@ DEFAULTS: Dict[str, Any] = {
     "run_id": None,
     "dry_run": False,
     "hash_outputs": False,
+    "test_mode": False,
 }
 
 CANONICAL_LAYOUT = {
@@ -213,6 +214,9 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         ),
         "dry_run": run_block.get("flags", {}).get(
             "dry_run", cfg.get("dry_run", DEFAULTS["dry_run"])
+        ),
+        "test_mode": run_block.get("flags", {}).get(
+            "test_mode", cfg.get("test_mode", DEFAULTS["test_mode"])
         ),
         "hash_outputs": run_block.get(
             "hash_outputs", cfg.get("hash_outputs", DEFAULTS["hash_outputs"])
@@ -429,7 +433,7 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         raise ValidationError("Config missing required value: root")
     if not isinstance(cfg.get("date_shift_days"), int):
         raise ValidationError("date_shift_days must be an integer")
-    for key in ("clean_scratch", "skip_mri", "skip_tdc", "dry_run", "hash_outputs"):
+    for key in ("clean_scratch", "skip_mri", "skip_tdc", "dry_run", "hash_outputs", "test_mode"):
         val = cfg.get(key)
         if not isinstance(val, bool):
             raise ValidationError(f"{key} must be a boolean")

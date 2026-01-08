@@ -9,6 +9,16 @@ This repository consolidates all preprocessing and PEDA steps required to genera
 
 ---
 
+## Fast Dev Loop
+
+Generate tiny fixtures and run schema tests:
+```
+python tools/generate_fixtures.py
+pytest -q
+```
+
+---
+
 ## 🧩 Components
 
 ### **1) `clean_tdc_data.py` — v1.5.1**  

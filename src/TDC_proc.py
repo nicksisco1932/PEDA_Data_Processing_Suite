@@ -34,14 +34,23 @@ def _zip_dir(src_dir: Path, dest_zip: Path) -> None:
 
 
 def _first_session_dir(root: Path) -> Path | None:
-    candidates = [d for d in root.iterdir() if d.is_dir()]
-    for d in candidates:
-        if d.name.startswith("_") and any(_is_local_db(p) for p in d.iterdir()):
-            return d
-    for d in candidates:
-        if d.name.startswith("_"):
-            return d
-    return candidates[0] if candidates else None
+    def _find_in(base: Path) -> Path | None:
+        candidates = [d for d in base.iterdir() if d.is_dir()]
+        for d in candidates:
+            if d.name.startswith("_") and any(_is_local_db(p) for p in d.iterdir()):
+                return d
+        for d in candidates:
+            if d.name.startswith("_"):
+                return d
+        return candidates[0] if candidates else None
+
+    tdc_root = root / "TDC Sessions"
+    if tdc_root.is_dir():
+        found = _find_in(tdc_root)
+        if found:
+            return found
+
+    return _find_in(root)
 
 
 def _extract_with_diagnostics(zf: zipfile.ZipFile, dest: Path, logger: logging.Logger) -> None:
@@ -70,6 +79,7 @@ def run(
     date_shift_days: int = 137,
     logger: logging.Logger | None = None,
     dry_run: bool = False,
+    test_mode: bool = False,
     step_results: Optional[Dict[str, Any]] = None,
     status_mgr: Optional[Any] = None,
 ) -> dict:
@@ -141,24 +151,32 @@ def run(
                 shutil.rmtree(staged_session, ignore_errors=True)
             staged_session.mkdir(parents=True, exist_ok=True)
 
-            # 6) process contents of the session
-            local_db_src = None
-            session_zips: List[Path] = []
-            for child in session_dir.iterdir():
-                if child.is_dir():
+        # 6) process contents of the session
+        local_db_src = None
+        session_zips: List[Path] = []
+        for child in session_dir.iterdir():
+            if child.is_dir():
+                if test_mode:
+                    dest_dir = staged_session / child.name
+                    shutil.copytree(child, dest_dir)
+                    log.info("Copied dir (test-mode) %s -> %s", child.name, dest_dir)
+                else:
                     dest_zip = staged_session / f"{child.name}.zip"
                     _zip_dir(child, dest_zip)
                     session_zips.append(dest_zip)
                     log.info("Packed %s -> %s", child.name, dest_zip)
-                elif child.suffix.lower() == ".zip":
+            elif child.suffix.lower() == ".zip":
+                if test_mode:
+                    log.info("Skipping zip in test-mode: %s", child)
+                else:
                     dest_zip = staged_session / child.name
                     shutil.copy2(child, dest_zip)
                     session_zips.append(dest_zip)
                     log.info("Copied zip -> %s", dest_zip)
-                elif _is_local_db(child):
-                    local_db_src = child
-                else:
-                    pass
+            elif _is_local_db(child):
+                local_db_src = child
+            else:
+                pass
 
             if local_db_src is None:
                 local_db_src = next((p for p in session_dir.rglob("*") if _is_local_db(p)), None)
@@ -181,6 +199,9 @@ def run(
                     staged_db, date_shift_days=date_shift_days, make_temp_proof=False, logger=log
                 )
             log.info("Anonymized local.db (tables: %s)", len(summary.get("tables", [])))
+
+        if test_mode and not (staged_session / "Raw").is_dir():
+            raise ValidationError(f"Raw directory missing in test-mode: {staged_session / 'Raw'}")
 
         # 8) copy staged session to final case tree
         target = tdc_dir / session_name

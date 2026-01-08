@@ -37,10 +37,10 @@ def test_structure_guard_fixes_layout(tmp_path: Path):
     rc, out, err = run_py("structure_guard.py", str(case_dir), "--id", case_id, "--fix")
     assert rc == 0, f"guard failed:\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
-    assert (case_dir / f"{case_id} TDC Sessions").exists()
-    assert (case_dir / f"{case_id} TDC Sessions" / "applog" / "Logs" / "orphan.log").exists()
-    assert (case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip").exists()
-    assert (case_dir / f"{case_id} Misc" / f"{case_id}_TreatmentReport.pdf").exists()
+    assert (case_dir / "TDC Sessions").exists()
+    assert (case_dir / "TDC Sessions" / "applog" / "Logs" / "orphan.log").exists()
+    assert (case_dir / "MR DICOM" / f"{case_id}_MRI.zip").exists()
+    assert (case_dir / "Misc" / f"{case_id}_TreatmentReport.pdf").exists()
 
 def test_process_mri_autodetects_case_dir_and_id(tmp_path: Path):
     out_root = tmp_path
@@ -58,7 +58,7 @@ def test_process_mri_autodetects_case_dir_and_id(tmp_path: Path):
     assert rc == 0, f"process_mri failed:\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
     case_dir = out_root / case_id
-    dst_zip = case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip"
+    dst_zip = case_dir / "MR DICOM" / f"{case_id}_MRI.zip"
     assert dst_zip.exists(), "MRI zip not placed in canonical location"
 
 def test_master_run_end_to_end_smoke(tmp_path: Path):
@@ -91,11 +91,11 @@ def test_master_run_end_to_end_smoke(tmp_path: Path):
 
     # If older scripts didn't make folders, ensure guard makes it canonical now
     case_dir = out_root / case_id
-    if not (case_dir / f"{case_id} TDC Sessions").exists():
+    if not (case_dir / "TDC Sessions").exists():
         rc2, out2, err2 = run_py("structure_guard.py", str(case_dir), "--id", case_id, "--fix")
         assert rc2 == 0, f"guard second pass failed:\nSTDOUT:\n{out2}\nSTDERR:\n{err2}"
 
-    assert (case_dir / f"{case_id} TDC Sessions").exists()
-    assert (case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip").exists()
-    assert (case_dir / f"{case_id} Misc" / f"{case_id}_TreatmentReport.pdf").exists()
-    assert (case_dir / f"{case_id} TDC Sessions" / "applog" / "Logs").exists()
+    assert (case_dir / "TDC Sessions").exists()
+    assert (case_dir / "MR DICOM" / f"{case_id}_MRI.zip").exists()
+    assert (case_dir / "Misc" / f"{case_id}_TreatmentReport.pdf").exists()
+    assert (case_dir / "TDC Sessions" / "applog" / "Logs").exists()
