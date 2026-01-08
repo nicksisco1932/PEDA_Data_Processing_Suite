@@ -33,12 +33,12 @@ def _find_best_pdf(case_root: Path, case_id: str) -> Path | None:
         return scored[0][2]
     return None
 
-def verify(case_root: Path, case_id: str) -> list[str]:
+def verify(case_root: Path, case_id: str, allow_missing_pdf: bool = False) -> list[str]:
     errs: list[str] = []
     misc = case_root / f"{case_id} Misc"
     mr   = case_root / f"{case_id} MR DICOM"
     tdc  = case_root / f"{case_id} TDC Sessions"
-    applog = case_root / "applog"
+    applog = tdc / "applog"
     logs = applog / "Logs"
 
     for d in [misc, mr, tdc, applog, logs]:
@@ -48,7 +48,7 @@ def verify(case_root: Path, case_id: str) -> list[str]:
     pdf = misc / f"{case_id}_TreatmentReport.pdf"
     if not pdf.exists():
         found = list(misc.glob(f"{case_id}_TreatmentReport.pdf*"))
-        if not found:
+        if not found and not allow_missing_pdf:
             errs.append(f"PDF not normalized: expected {pdf.name} in {misc}")
 
     if not (mr / f"{case_id}_MRI.zip").exists():
@@ -60,7 +60,11 @@ def verify(case_root: Path, case_id: str) -> list[str]:
 
     root_logs = case_root / "Logs"
     if root_logs.exists():
-        errs.append("Root 'Logs' should be under applog/Logs")
+        errs.append("Root 'Logs' should be under TDC Sessions/applog/Logs")
+
+    root_applog = case_root / "applog" / "Logs"
+    if root_applog.exists():
+        errs.append("Root applog/Logs should be under TDC Sessions/applog/Logs")
 
     return errs
 
@@ -69,7 +73,7 @@ def fix(case_root: Path, case_id: str) -> list[str]:
     misc = _ensure_dir(case_root / f"{case_id} Misc")
     mr   = _ensure_dir(case_root / f"{case_id} MR DICOM")
     tdc  = _ensure_dir(case_root / f"{case_id} TDC Sessions")
-    applog = _ensure_dir(case_root / "applog")
+    applog = _ensure_dir(tdc / "applog")
     logs = _ensure_dir(applog / "Logs")
 
     # 1) Move stray session dirs into TDC Sessions
@@ -81,7 +85,7 @@ def fix(case_root: Path, case_id: str) -> list[str]:
                 shutil.move(str(p), str(dest))
                 changes.append(f"MOVED session dir -> {dest}")
 
-    # 2) Merge root 'Logs' into applog/Logs
+    # 2) Merge root 'Logs' into TDC Sessions/applog/Logs
     root_logs = case_root / "Logs"
     if root_logs.exists():
         for item in root_logs.rglob("*"):
@@ -95,7 +99,25 @@ def fix(case_root: Path, case_id: str) -> list[str]:
                     shutil.copy2(item, dst)
         try:
             shutil.rmtree(root_logs)
-            changes.append("MERGED root Logs -> applog/Logs")
+            changes.append("MERGED root Logs -> TDC Sessions/applog/Logs")
+        except Exception:
+            pass
+
+    # 2b) Merge root applog/Logs into TDC Sessions/applog/Logs
+    root_applog = case_root / "applog" / "Logs"
+    if root_applog.exists():
+        for item in root_applog.rglob("*"):
+            if item.is_file():
+                rel = item.relative_to(root_applog)
+                dst = logs / rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.move(str(item), str(dst))
+                except Exception:
+                    shutil.copy2(item, dst)
+        try:
+            shutil.rmtree(case_root / "applog")
+            changes.append("MERGED root applog/Logs -> TDC Sessions/applog/Logs")
         except Exception:
             pass
 

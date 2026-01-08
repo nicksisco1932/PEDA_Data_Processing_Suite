@@ -38,7 +38,7 @@ def test_structure_guard_fixes_layout(tmp_path: Path):
     assert rc == 0, f"guard failed:\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
     assert (case_dir / f"{case_id} TDC Sessions").exists()
-    assert (case_dir / "applog" / "Logs" / "orphan.log").exists()
+    assert (case_dir / f"{case_id} TDC Sessions" / "applog" / "Logs" / "orphan.log").exists()
     assert (case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip").exists()
     assert (case_dir / f"{case_id} Misc" / f"{case_id}_TreatmentReport.pdf").exists()
 
@@ -98,4 +98,4 @@ def test_master_run_end_to_end_smoke(tmp_path: Path):
     assert (case_dir / f"{case_id} TDC Sessions").exists()
     assert (case_dir / f"{case_id} MR DICOM" / f"{case_id}_MRI.zip").exists()
     assert (case_dir / f"{case_id} Misc" / f"{case_id}_TreatmentReport.pdf").exists()
-    assert (case_dir / "applog" / "Logs").exists()
+    assert (case_dir / f"{case_id} TDC Sessions" / "applog" / "Logs").exists()

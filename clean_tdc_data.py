@@ -33,12 +33,12 @@ def unzip_tdc(input_zip: Path, out_dir: Path, logger: logging.Logger) -> None:
 
 def normalize_structure(case_dir: Path, norm_id: str, logger: logging.Logger) -> Path:
     tdc_dir  = case_dir / f"{norm_id} TDC Sessions"
-    tdc_app  = None  # deprecated
-    tdc_logs = None  # deprecated
     misc_dir = case_dir / f"{norm_id} Misc"
     mr_dir   = case_dir / f"{norm_id} MR DICOM"
     for d in (tdc_dir, misc_dir, mr_dir):
         d.mkdir(parents=True, exist_ok=True)
+
+    (tdc_dir / "applog" / "Logs").mkdir(parents=True, exist_ok=True)
 
     nested = None  # no tdc-level logs
     # (deprecated: nested logs)
@@ -53,16 +53,17 @@ def normalize_structure(case_dir: Path, norm_id: str, logger: logging.Logger) ->
     return tdc_dir
 
 
-def _merge_tdc_applog_up(case_dir: Path, norm_id: str, logger):
-    top_logs = case_dir / "applog" / "Logs"
-    top_logs.mkdir(parents=True, exist_ok=True)
+def _merge_tdc_applog_to_tdc(case_dir: Path, norm_id: str, logger):
     tdc_dir  = case_dir / f"{norm_id} TDC Sessions"
-    tdc_app  = tdc_dir / "applog"
-    if tdc_app.is_dir():
-        for p in tdc_app.rglob("*"):
+    tdc_logs = tdc_dir / "applog" / "Logs"
+    tdc_logs.mkdir(parents=True, exist_ok=True)
+
+    root_logs = case_dir / "Logs"
+    if root_logs.exists():
+        for p in root_logs.rglob("*"):
             if p.is_file():
-                rel = p.relative_to(tdc_app)
-                dest = top_logs / rel
+                rel = p.relative_to(root_logs)
+                dest = tdc_logs / rel
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 try:
                     shutil.move(str(p), str(dest))
@@ -71,8 +72,25 @@ def _merge_tdc_applog_up(case_dir: Path, norm_id: str, logger):
                         shutil.copy2(p, dest)
                     except Exception:
                         logger.warning(f"Could not relocate {p} -> {dest}")
-        shutil.rmtree(tdc_app, ignore_errors=True)
-        logger.info("Merged TDC applog back to <CASE>/applog/Logs")
+        shutil.rmtree(root_logs, ignore_errors=True)
+        logger.info("Merged root Logs -> TDC Sessions/applog/Logs")
+
+    root_applog = case_dir / "applog" / "Logs"
+    if root_applog.exists():
+        for p in root_applog.rglob("*"):
+            if p.is_file():
+                rel = p.relative_to(root_applog)
+                dest = tdc_logs / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.move(str(p), str(dest))
+                except Exception:
+                    try:
+                        shutil.copy2(p, dest)
+                    except Exception:
+                        logger.warning(f"Could not relocate {p} -> {dest}")
+        shutil.rmtree(case_dir / "applog", ignore_errors=True)
+        logger.info("Merged root applog/Logs -> TDC Sessions/applog/Logs")
 
 
 def run(case_dir: Path, norm_id: str | None, input_path: Path | None,
@@ -93,7 +111,7 @@ def run(case_dir: Path, norm_id: str | None, input_path: Path | None,
             logger.info("No TDC zip provided; continuing")
 
         tdc_dir = normalize_structure(case_dir, nid, logger)
-        _merge_tdc_applog_up(case_dir, nid, logger)
+        _merge_tdc_applog_to_tdc(case_dir, nid, logger)
         logger.info("TDC processing completed.")
     except Exception as e:
         logger.error(f"TDC processing failed: {e}")

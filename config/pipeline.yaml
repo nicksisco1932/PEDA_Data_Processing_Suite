@@ -1,0 +1,66 @@
+# config/pipeline.yaml
+# Flexible config: avoids hard-coded filenames, supports auto-discovery via search patterns,
+# and keeps paths relocatable.
+
+version: 1
+
+case:
+  id: "093_01-098"                # Prefer the canonical normalized ID you use in folder names
+  root: "E:\\Data_Clean"          # Root containing case folders
+  dir: null                       # Optional explicit override (must match canonical layout)
+  layout:
+    mr_dir_name: "{case_id} MR DICOM"    # Canonical (do not change)
+    tdc_dir_name: "{case_id} TDC Sessions"  # Canonical (do not change)
+    misc_dir_name: "{case_id} Misc"      # Canonical (do not change)
+
+inputs:
+  mode: "explicit"                # "auto" | "explicit"
+  explicit:
+    mri_zip: "E:\\093_01-098\\MR_093-01_098.zip"
+    tdc_zip: "E:\\093_01-098\\TDC_093-01_098.zip"
+    pdf_input: "E:\\093_01-098\\TreatmentReport_093-01_098.pdf"
+  search:
+    # Where to look, in order. These can be absolute or relative to case.root/case.dir.
+    # Canonical defaults (if empty): case_dir\\incoming, case_dir, root\\incoming\\case_id.
+    roots:
+      - "{case_dir}\\incoming"
+      - "{case_dir}"
+      - "{case.root}\\incoming\\{case_id}"
+    # Try patterns in order; first match wins.
+    mri_zip_globs:
+      - "*MRI*.zip"
+      - "MRI_*.zip"
+      - "MR_*.zip"
+      - "*MR*.zip"
+      - "*DICOM*.zip"
+    tdc_zip_globs:
+      - "*TDC*.zip"
+      - "*Session*.zip"
+      - "*.zip"
+    # Optional: if multiple matches, pick newest by modified time.
+    pick: "newest"                # "newest" | "first" | "largest"
+
+run:
+  scratch:
+    dir: null                     # null => policy-based default
+    clean_on_success: false
+    policy: "local_temp"          # "local_temp" | "case_root"
+  flags:
+    skip_mri: false
+    skip_tdc: false
+    dry_run: false
+  anonymization:
+    date_shift_days: 137
+  hash_outputs: false             # If true, record fingerprints of final outputs in the manifest
+
+logging:
+  dir: "{case_dir}\\{case_id} Misc\\Logs"
+  level_console: "INFO"           # Console verbosity
+  level_file: "DEBUG"             # File verbosity (captured in rotating log)
+  file_name: "{case_id}__{run_id}.log"
+  manifest_dir: "{case_dir}\\run_manifests"
+  manifest_name: "{case_id}__{run_id}__manifest.json"
+
+metadata:
+  run_id: "auto"                  # "auto" or an explicit string
+  note: null                      # optional operator note, stored in manifest

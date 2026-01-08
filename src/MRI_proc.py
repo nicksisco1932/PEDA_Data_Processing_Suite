@@ -1,11 +1,22 @@
 # MRI_proc.py
+from __future__ import annotations
+
 from pathlib import Path
-import sys, shutil, zipfile, tempfile, os
+import logging
+import shutil
+import tempfile
+import zipfile
+import os
+import sys
 
-def fail(msg, code=1):
-    print(f"[ERROR] {msg}", file=sys.stderr); sys.exit(code)
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-def _zip_dir(src_dir: Path, dest_zip: Path):
+from logutil import ValidationError, ProcessingError, copy_with_integrity
+
+
+def _zip_dir(src_dir: Path, dest_zip: Path) -> None:
     dest_zip.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(dest_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for root, _, files in os.walk(src_dir):
@@ -14,38 +25,69 @@ def _zip_dir(src_dir: Path, dest_zip: Path):
                 p = rp / name
                 zf.write(p, arcname=str(p.relative_to(src_dir)))
 
-def run(*, root: Path, case: str, input_zip: Path, scratch: Path):
+
+def run(
+    *,
+    root: Path,
+    case: str,
+    input_zip: Path,
+    scratch: Path,
+    logger: logging.Logger | None = None,
+    dry_run: bool = False,
+) -> dict:
+    log = logger or logging.getLogger(__name__)
     case_dir = root / case
     mr_dir = case_dir / f"{case} MR DICOM"
 
     if not input_zip.exists() or not input_zip.is_file() or input_zip.suffix.lower() != ".zip":
-        fail(f"MRI input not found or not .zip: {input_zip}", 2)
+        raise ValidationError(f"MRI input not found or not .zip: {input_zip}")
 
-    print(f"📦 MRI input: {input_zip}")
-
-    # 1) backup into scratch
     bak = scratch / (input_zip.name + ".bak")
-    shutil.copy2(input_zip, bak)
-    print(f"🗄️  MRI backup: {bak}")
-
-    # 2) unzip -> (future anonymize) -> rezip into scratch/MRI_anonymized.zip
-    with tempfile.TemporaryDirectory(dir=scratch, prefix="mri_unzipped_") as tmpdir:
-        tmp = Path(tmpdir)
-        with zipfile.ZipFile(bak, "r") as zf:
-            zf.extractall(tmp)
-        print(f"📥 MRI extracted → {tmp}")
-
-        # (anonymization would happen here later, operating on files under `tmp`)
-
-        out_zip = scratch / "MRI_anonymized.zip"
-        if out_zip.exists(): out_zip.unlink()
-        _zip_dir(tmp, out_zip)
-        print(f"📤 MRI repacked → {out_zip}")
-
-    # 3) copy final to case MR folder as <case>_MRI.zip
+    out_zip = scratch / "MRI_anonymized.zip"
     final_zip = mr_dir / f"{case}_MRI.zip"
-    final_zip.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(out_zip, final_zip)
-    print(f"✅ MRI final → {final_zip}")
 
-    return {"backup": bak, "scratch_zip": out_zip, "final_zip": final_zip}
+    if dry_run:
+        log.info("MRI dry-run: would copy, extract, and re-zip %s", input_zip)
+        return {"backup": bak, "scratch_zip": out_zip, "final_zip": final_zip}
+
+    try:
+        log.info("MRI input: %s", input_zip)
+
+        # 1) backup into scratch with integrity verification
+        backup_info = copy_with_integrity(input_zip, bak, retries=2, logger=log)
+        log.info(
+            "MRI backup verified: attempts=%s src_sha256=%s dst_sha256=%s",
+            backup_info.get("attempts"),
+            backup_info.get("src_sha256"),
+            backup_info.get("dst_sha256"),
+        )
+
+        # 2) unzip -> (future anonymize) -> rezip into scratch/MRI_anonymized.zip
+        with tempfile.TemporaryDirectory(dir=scratch, prefix="mri_unzipped_") as tmpdir:
+            tmp = Path(tmpdir)
+            with zipfile.ZipFile(bak, "r") as zf:
+                zf.extractall(tmp)
+            log.info("MRI extracted: %s", tmp)
+
+            # (anonymization would happen here later, operating on files under `tmp`)
+
+            if out_zip.exists():
+                out_zip.unlink()
+            _zip_dir(tmp, out_zip)
+            log.info("MRI repacked: %s", out_zip)
+
+        # 3) copy final to case MR folder as <case>_MRI.zip
+        final_zip.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(out_zip, final_zip)
+        log.info("MRI final: %s", final_zip)
+    except ValidationError:
+        raise
+    except Exception as exc:
+        raise ProcessingError(f"MRI processing failed: {exc}") from exc
+
+    return {
+        "backup": bak,
+        "backup_info": backup_info if not dry_run else None,
+        "scratch_zip": out_zip,
+        "final_zip": final_zip,
+    }

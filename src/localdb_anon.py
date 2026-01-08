@@ -14,7 +14,7 @@ Usage (standalone):
 """
 
 from __future__ import annotations
-import argparse, sqlite3, tempfile, shutil, json, re, hashlib, datetime
+import argparse, sqlite3, tempfile, shutil, json, re, hashlib, datetime, logging, sys
 from pathlib import Path
 
 _SALT = "pedaprocanon-2025-09-30"
@@ -97,10 +97,17 @@ def _find_local_db(case_dir: Path, norm_id: str) -> Path | None:
     cands.sort(key=lambda p: p.stat().st_mtime, reverse=True)
     return cands[0]
 
-def anonymize_in_place(db_path: Path, date_shift_days: int = 137, make_temp_proof: bool = True) -> dict:
+def anonymize_in_place(
+    db_path: Path,
+    date_shift_days: int = 137,
+    make_temp_proof: bool = True,
+    logger: logging.Logger | None = None,
+) -> dict:
+    log = logger or logging.getLogger(__name__)
     if make_temp_proof:
         with tempfile.TemporaryDirectory() as td:
             shutil.copy2(db_path, Path(td) / "local.db.backup")
+        log.debug("Temporary proof copy created for %s", db_path)
     con = sqlite3.connect(db_path); con.row_factory = sqlite3.Row
     cur = con.cursor(); cur.execute("PRAGMA foreign_keys=OFF")
 
@@ -186,6 +193,9 @@ def main():
                     help="Do not make a temp backup copy")
     args = ap.parse_args()
 
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    log = logging.getLogger(__name__)
+
     if args.db:
         db_path = Path(args.db)
     else:
@@ -193,10 +203,16 @@ def main():
             ap.error("--norm-id required with --case-dir")
         db_path = _find_local_db(Path(args.case_dir), args.norm_id)
         if not db_path:
-            print(json.dumps({"ok": False, "error": "local.db not found"})); return 2
+            sys.stdout.write(json.dumps({"ok": False, "error": "local.db not found"}) + "\n")
+            return 2
 
-    s = anonymize_in_place(db_path, args.date_shift_days, make_temp_proof=(not args.no_temp_proof))
-    print(json.dumps({"ok": True, "summary": s}, indent=2))
+    s = anonymize_in_place(
+        db_path,
+        args.date_shift_days,
+        make_temp_proof=(not args.no_temp_proof),
+        logger=log,
+    )
+    sys.stdout.write(json.dumps({"ok": True, "summary": s}, indent=2) + "\n")
     return 0
 
 if __name__ == "__main__":
