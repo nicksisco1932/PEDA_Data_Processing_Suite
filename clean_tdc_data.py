@@ -32,9 +32,21 @@ def unzip_tdc(input_zip: Path, out_dir: Path, logger: logging.Logger) -> None:
     logger.info(f"Extracted to {out_dir}")
 
 def normalize_structure(case_dir: Path, norm_id: str, logger: logging.Logger) -> Path:
-    tdc_dir  = case_dir / f"{norm_id} TDC Sessions"
-    misc_dir = case_dir / f"{norm_id} Misc"
-    mr_dir   = case_dir / f"{norm_id} MR DICOM"
+    legacy_dirs = []
+    if norm_id:
+        legacy_dirs = [
+            case_dir / f"{norm_id} TDC Sessions",
+            case_dir / f"{norm_id} Misc",
+            case_dir / f"{norm_id} MR DICOM",
+        ]
+    if any(p.exists() for p in legacy_dirs):
+        logger.warning(
+            "Legacy case-prefixed folders exist; using new unprefixed schema under %s",
+            case_dir,
+        )
+    tdc_dir  = case_dir / "TDC Sessions"
+    misc_dir = case_dir / "Misc"
+    mr_dir   = case_dir / "MR DICOM"
     for d in (tdc_dir, misc_dir, mr_dir):
         d.mkdir(parents=True, exist_ok=True)
 
@@ -54,7 +66,7 @@ def normalize_structure(case_dir: Path, norm_id: str, logger: logging.Logger) ->
 
 
 def _merge_tdc_applog_to_tdc(case_dir: Path, norm_id: str, logger):
-    tdc_dir  = case_dir / f"{norm_id} TDC Sessions"
+    tdc_dir  = case_dir / "TDC Sessions"
     tdc_logs = tdc_dir / "applog" / "Logs"
     tdc_logs.mkdir(parents=True, exist_ok=True)
 

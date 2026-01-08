@@ -84,7 +84,7 @@ def pedapaths(
 
     # --- Case and output roots ---
     case_root = case_dir.parent  # ...\<CASE_ID>\
-    output_root = case_root / "output" / f"{patient_id} TDC Sessions"
+    output_root = case_root / "output" / "TDC Sessions"
 
     # Segment output dir
     seg_name = seg_path.name

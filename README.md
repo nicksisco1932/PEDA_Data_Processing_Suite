@@ -16,12 +16,12 @@ Normalizes and unpacks TDC case archives into a canonical filesystem.
 
 **Highlights**
 - Merges stray `Logs` → `applog/Logs`  
-- Moves timestamped session folders into `<CASEID> TDC Sessions/`  
+- Moves timestamped session folders into `TDC Sessions/`  
 - Guarantees stable subfolders:
   ```
-  <CASEID> TDC Sessions/
-  <CASEID> Misc/
-  <CASEID> MR DICOM/
+  TDC Sessions/
+  Misc/
+  MR DICOM/
   applog/Logs/
   ```
 
@@ -32,7 +32,7 @@ Normalizes MRI archives into a deterministic zip.
 
 **Behavior**
 - Auto-detects case_dir and norm-id from filenames  
-- Normalizes MRI packaging into `<CASEID> MR DICOM/<CASEID>_MRI.zip`  
+- Normalizes MRI packaging into `MR DICOM/<CASEID>_MRI.zip`  
 - Removes empty `DICOM/` folders  
 - Logs to `applog/Logs/process_mri_package.log`
 

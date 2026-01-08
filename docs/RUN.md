@@ -24,24 +24,24 @@ Outputs and locations
 ```
 <root>\<case_id>
 │
-├── <case_id> Misc
+├── Misc
 │   └── <case_id>_TreatmentReport.pdf
 │
-├── <case_id> MR DICOM
+├── MR DICOM
 │   └── <case_id>_MRI.zip
 │
 ├── <case_id> PEDAv9.1.3-Data.zip (placeholder)
 │
-└── <case_id> TDC Sessions
+└── TDC Sessions
     ├── applog\Logs\
     │   └── <case_id>_log.txt
     └── Raw\<YYYY-MM-DD>\
 ```
 - Inputs can live anywhere (explicit paths or auto-discovery); outputs are always written to the canonical folders above.
-- MRI final zip: `<root>/<case>/<case> MR DICOM/<case>_MRI.zip`
-- TDC final session: `<root>/<case>/<case> TDC Sessions/<session_name>`
-- Treatment report (if provided): `<root>/<case>/<case> Misc/<case>_TreatmentReport.pdf`
-- Logs: `<root>/<case>/<case> Misc/Logs/<case>__<run_id>.log`
+- MRI final zip: `<root>/<case>/MR DICOM/<case>_MRI.zip`
+- TDC final session: `<root>/<case>/TDC Sessions/<session_name>`
+- Treatment report (if provided): `<root>/<case>/Misc/<case>_TreatmentReport.pdf`
+- Logs: `<root>/<case>/Misc/Logs/<case>__<run_id>.log`
 - Manifests: `<root>/<case>/run_manifests/<case>__<run_id>__manifest.json`
 
 Dry-run behavior

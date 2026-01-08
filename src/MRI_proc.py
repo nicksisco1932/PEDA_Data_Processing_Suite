@@ -37,7 +37,7 @@ def run(
 ) -> dict:
     log = logger or logging.getLogger(__name__)
     case_dir = root / case
-    mr_dir = case_dir / f"{case} MR DICOM"
+    mr_dir = case_dir / "MR DICOM"
 
     if not input_zip.exists() or not input_zip.is_file() or input_zip.suffix.lower() != ".zip":
         raise ValidationError(f"MRI input not found or not .zip: {input_zip}")

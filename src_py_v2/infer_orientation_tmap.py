@@ -4,7 +4,7 @@ from pathlib import Path
 
 # --- EDIT THESE PATHS ---
 mat_path = Path(r"D:\093_01-098 PEDAv9.1.3-Data\093_01-098 PEDAv9.1.3-Data\Segment 1\TMap.mat")
-npy_path = Path(r"D:\093_01-098\TDC_093-01_098\output\093_01-098 TDC Sessions\2025-11-05--07-05-25\PEDA\TMap.npy")
+npy_path = Path(r"D:\093_01-098\TDC_093-01_098\output\TDC Sessions\2025-11-05--07-05-25\PEDA\TMap.npy")
 
 # --- LOAD DATA ---
 mat_data = loadmat(mat_path)

@@ -4,20 +4,25 @@ run_peda.py  (v0.4.0)
 
 Structure-aware PEDA runner/simulator.
 
-Accepted input layouts (both are valid):
+Accepted input layouts (all are valid):
 
-A) Nested case folder:
+A) Canonical (preferred):
+<ROOT or OUTPUT>\<CASE>\
+  ├─ TDC Sessions\
+  └─ MR DICOM\
+
+B) Legacy nested case folder:
 <ROOT or OUTPUT>\<CASE>\
   ├─ <CASE> TDC Sessions\
   └─ <CASE> MR DICOM\
 
-B) Flat layout (canonical in your unified tree):
+C) Legacy flat layout:
 <ROOT or OUTPUT>\
   ├─ <CASE> TDC Sessions\
   └─ <CASE> MR DICOM\
 
 Behaviors:
-- Validates the layout before running (works for A or B).
+- Validates the layout before running (works for A/B/C).
 - Real mode: calls MATLAB -batch "cd(PEDA); MAIN_PEDA('<INPUT_DIR>')"
   where <INPUT_DIR> is exactly the directory you pass in (case_dir).
 - Simulation: DOES NOT create any directories. Writes a PEDA-only marker
@@ -36,8 +41,10 @@ from pathlib import Path
 DEFAULT_PEDA_HOME = os.environ.get("PEDA_HOME", r"C:\Users\NicholasSisco\Local_apps\PEDA")
 
 CASE_NAME_RE = re.compile(r"^\d{3}_\d{2}-\d{3}$")
-REQ_TDC_SUFFIX = " TDC Sessions"
-REQ_DCM_SUFFIX = " MR DICOM"
+REQ_TDC_NAME = "TDC Sessions"
+REQ_DCM_NAME = "MR DICOM"
+LEGACY_TDC_SUFFIX = " TDC Sessions"
+LEGACY_DCM_SUFFIX = " MR DICOM"
 
 def _norm_for_matlab(p: Path) -> str:
     s = str(p.resolve()).replace("\\", "/")
@@ -77,22 +84,29 @@ def _write(path: Path, text: str) -> None:
 def _resolve_case_paths(case_dir: Path) -> tuple[str|None, Path, Path]:
     """
     Returns (case_name, tdc_path, dcm_path) for either layout:
-      A) Nested:  case_dir.name == CASE and case_dir/<CASE> TDC Sessions|MR DICOM
-      B) Flat:    case_dir contains <CASE> TDC Sessions|MR DICOM directly
+      A) Canonical: case_dir/TDC Sessions and case_dir/MR DICOM
+      B) Legacy nested:  case_dir.name == CASE and case_dir/<CASE> TDC Sessions|MR DICOM
+      C) Legacy flat:    case_dir contains <CASE> TDC Sessions|MR DICOM directly
     If not resolvable, returns (None, candidate_tdc, candidate_dcm) where candidates
     are what the nested paths *would* be for diagnostics.
     """
     case_dir = case_dir.resolve()
     name = case_dir.name
 
-    # Try nested first
-    tdc_nested = case_dir / f"{name}{REQ_TDC_SUFFIX}"
-    dcm_nested = case_dir / f"{name}{REQ_DCM_SUFFIX}"
+    # Canonical (unprefixed) first
+    tdc_canon = case_dir / REQ_TDC_NAME
+    dcm_canon = case_dir / REQ_DCM_NAME
+    if tdc_canon.exists() or dcm_canon.exists():
+        return name, tdc_canon, dcm_canon
+
+    # Legacy nested
+    tdc_nested = case_dir / f"{name}{LEGACY_TDC_SUFFIX}"
+    dcm_nested = case_dir / f"{name}{LEGACY_DCM_SUFFIX}"
     if tdc_nested.exists() or dcm_nested.exists():
         # We accept "exists" because some users may only provide one; validation checks both.
         return name, tdc_nested, dcm_nested
 
-    # Try flat: scan direct children and infer a consistent CASE ID
+    # Legacy flat: scan direct children and infer a consistent CASE ID
     try:
         kids = [p for p in case_dir.iterdir() if p.is_dir()]
     except FileNotFoundError:
@@ -101,11 +115,11 @@ def _resolve_case_paths(case_dir: Path) -> tuple[str|None, Path, Path]:
     candidates: dict[str, dict[str, Path]] = {}
     for d in kids:
         dn = d.name
-        if dn.endswith(REQ_TDC_SUFFIX):
-            cid = dn[: -len(REQ_TDC_SUFFIX)]
+        if dn.endswith(LEGACY_TDC_SUFFIX):
+            cid = dn[: -len(LEGACY_TDC_SUFFIX)]
             candidates.setdefault(cid, {})["tdc"] = d
-        elif dn.endswith(REQ_DCM_SUFFIX):
-            cid = dn[: -len(REQ_DCM_SUFFIX)]
+        elif dn.endswith(LEGACY_DCM_SUFFIX):
+            cid = dn[: -len(LEGACY_DCM_SUFFIX)]
             candidates.setdefault(cid, {})["dcm"] = d
 
     for cid, have in candidates.items():
@@ -129,8 +143,9 @@ def _validate_structure(case_dir: Path) -> tuple[bool, list[str], str|None, Path
     if case_name is None:
         errs.append(
             "Could not find a valid case layout. Expected either:\n"
-            "  A) <...>\\<CASE>\\<CASE> TDC Sessions and <CASE> MR DICOM\n"
-            "  B) <...>\\<CASE> TDC Sessions and <CASE> MR DICOM"
+            "  A) <...>\\<CASE>\\TDC Sessions and MR DICOM\n"
+            "  B) <...>\\<CASE>\\<CASE> TDC Sessions and <CASE> MR DICOM\n"
+            "  C) <...>\\<CASE> TDC Sessions and <CASE> MR DICOM"
         )
         return False, errs, None, tdc_path, dcm_path
 
@@ -207,7 +222,7 @@ def run_peda(
     peda_home = Path(peda_home).resolve()
 
     ts = _timestamp()
-    log_dir = (log_root if log_root else (case_dir / "applog" / "Logs"))
+    log_dir = (log_root if log_root else (case_dir / "TDC Sessions" / "applog" / "Logs"))
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"PEDA_{ts}.log"
 

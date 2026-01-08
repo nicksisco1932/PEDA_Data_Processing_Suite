@@ -59,11 +59,11 @@ def _build_plan(
 ) -> List[str]:
     plan: List[str] = []
     plan.append(f"Create case dir: {case_dir}")
-    plan.append(f"Create output dir: {case_dir / (case + ' Misc')}")
-    plan.append(f"Create output dir: {case_dir / (case + ' MR DICOM')}")
-    plan.append(f"Create output dir: {case_dir / (case + ' TDC Sessions')}")
-    plan.append(f"Create output dir: {case_dir / (case + ' TDC Sessions') / 'applog' / 'Logs'}")
-    plan.append(f"TDC Raw output dir created if TDC produces it: {case_dir / (case + ' TDC Sessions') / 'Raw'}")
+    plan.append(f"Create output dir: {case_dir / 'Misc'}")
+    plan.append(f"Create output dir: {case_dir / 'MR DICOM'}")
+    plan.append(f"Create output dir: {case_dir / 'TDC Sessions'}")
+    plan.append(f"Create output dir: {case_dir / 'TDC Sessions' / 'applog' / 'Logs'}")
+    plan.append(f"TDC Raw output dir created if TDC produces it: {case_dir / 'TDC Sessions' / 'Raw'}")
     plan.append(f"Create scratch dir: {scratch}")
     if not skip_mri and mri_input:
         plan.append(
@@ -82,7 +82,7 @@ def _build_plan(
         plan.append(f"Copy staged TDC session to: {tdc_dir / '<session_name>'}")
     if pdf_input:
         plan.append(
-            f"Copy treatment report to: {case_dir / (case + ' Misc') / (case + '_TreatmentReport.pdf')}"
+            f"Copy treatment report to: {case_dir / 'Misc' / (case + '_TreatmentReport.pdf')}"
         )
     plan.append(f"Write log file to: {log_dir / (case + '__' + run_id + '.log')}")
     plan.append(f"Write manifest to: {manifest_path}")
@@ -151,9 +151,9 @@ def main() -> int:
     root: Path = cfg["root"]
     case: str = cfg["case"]
     case_dir = cfg.get("case_dir") or (root / case)
-    mr_dir = cfg.get("mr_dir") or (case_dir / f"{case} MR DICOM")
-    tdc_dir = cfg.get("tdc_dir") or (case_dir / f"{case} TDC Sessions")
-    misc_dir = cfg.get("misc_dir") or (case_dir / f"{case} Misc")
+    mr_dir = cfg.get("mr_dir") or (case_dir / "MR DICOM")
+    tdc_dir = cfg.get("tdc_dir") or (case_dir / "TDC Sessions")
+    misc_dir = cfg.get("misc_dir") or (case_dir / "Misc")
     scratch: Path = cfg["scratch"] or (case_dir / "scratch")
     if cfg.get("log_dir"):
         log_dir = cfg["log_dir"]
@@ -226,9 +226,28 @@ def main() -> int:
             logger=logger, step_name="Controller validations", results=step_results, status_mgr=status_mgr
         ):
             expected_case_name = case
-            expected_mr_name = f"{case} MR DICOM"
-            expected_tdc_name = f"{case} TDC Sessions"
-            expected_misc_name = f"{case} Misc"
+            expected_mr_name = "MR DICOM"
+            expected_tdc_name = "TDC Sessions"
+            expected_misc_name = "Misc"
+
+            legacy_misc = case_dir / f"{case} Misc"
+            legacy_mr = case_dir / f"{case} MR DICOM"
+            legacy_tdc = case_dir / f"{case} TDC Sessions"
+            legacy_dirs = [legacy_misc, legacy_mr, legacy_tdc]
+            legacy_present = [p for p in legacy_dirs if p.exists()]
+            if legacy_present:
+                if all(p.exists() for p in (misc_dir, mr_dir, tdc_dir)):
+                    logger.warning(
+                        "Legacy case-prefixed folders exist; using new unprefixed schema. legacy=%s",
+                        [str(p) for p in legacy_present],
+                    )
+                else:
+                    logger.warning(
+                        "Legacy case-prefixed folders exist; creating new unprefixed folders at %s, %s, %s",
+                        misc_dir,
+                        mr_dir,
+                        tdc_dir,
+                    )
 
             if not case_dir.exists() and dry_run:
                 logger.warning(
@@ -237,11 +256,11 @@ def main() -> int:
             if dry_run:
                 if not case_dir.exists():
                     logger.info(
-                        "Would create output folders under case_dir=%s (%s, %s, %s)",
+                        "Would create output folders under case_dir=%s (Misc=%s, MR DICOM=%s, TDC Sessions=%s)",
                         case_dir,
-                        expected_misc_name,
-                        expected_mr_name,
-                        expected_tdc_name,
+                        case_dir / expected_misc_name,
+                        case_dir / expected_mr_name,
+                        case_dir / expected_tdc_name,
                     )
             else:
                 case_dir.mkdir(parents=True, exist_ok=True)

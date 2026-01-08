@@ -10,15 +10,15 @@ Case ID format: NNN_NN-NNN (e.g., 017_01-474)
 
 D:\Data_Clean\017_01-474
 |
-+-- 017_01-474 Misc
++-- Misc
 |   +-- 017_01-474_TreatmentReport.pdf
 |
-+-- 017_01-474 MR DICOM
++-- MR DICOM
 |   +-- 017_01-474_MRI.zip
 |
 +-- 017_01-474 PEDAv9.1.3-Data.zip (placeholder)
 |
-+-- 017_01-474 TDC Sessions
++-- TDC Sessions
     +-- applog\Logs\
     |   +-- 017-01-474_log.txt
     +-- Raw\2025-09-29\
@@ -26,9 +26,9 @@ D:\Data_Clean\017_01-474
 Requirements
 1) Layout derivation:
    - case_dir = <root>\<case_id>
-   - misc_dir = <case_dir>\<case_id> Misc
-   - mr_dir   = <case_dir>\<case_id> MR DICOM
-   - tdc_dir  = <case_dir>\<case_id> TDC Sessions
+   - misc_dir = <case_dir>\Misc
+   - mr_dir   = <case_dir>\MR DICOM
+   - tdc_dir  = <case_dir>\TDC Sessions
 
 2) Output targets:
    - MRI final zip MUST land at:

@@ -5,7 +5,7 @@ Diagnostic parity checker between legacy MATLAB PEDA outputs and Python PEDA out
 
 Usage:
     python compare_peda_outputs.py --mat-root "D:\\093_01-098 PEDAv9.1.3-Data\\093_01-098 PEDAv9.1.3-Data" \
-                                   --py-root  "D:\\093_01-098\\output\\093_01-098 TDC Sessions\\<session_timestamp>\\PEDA" \
+                                   --py-root  "D:\\093_01-098\\output\\TDC Sessions\\<session_timestamp>\\PEDA" \
                                    [--tol 1e-2] [--print-tree]
 
 This script is read-only; it does not modify any outputs.

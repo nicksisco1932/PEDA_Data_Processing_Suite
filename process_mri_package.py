@@ -31,7 +31,13 @@ def run(*, input: Path, birthdate: str, out_root: Path, logs_root: Path, apply: 
         return 2
 
     case_dir = out_root / case_id
-    mr_dir = case_dir / f"{case_id} MR DICOM"
+    legacy_mr_dir = case_dir / f"{case_id} MR DICOM"
+    if legacy_mr_dir.exists():
+        logger.warning(
+            "Legacy case-prefixed MR folder exists; using new schema at %s",
+            case_dir / "MR DICOM",
+        )
+    mr_dir = case_dir / "MR DICOM"
     mr_dir.mkdir(parents=True, exist_ok=True)
 
     if apply:

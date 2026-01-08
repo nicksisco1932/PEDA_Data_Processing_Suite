@@ -90,9 +90,13 @@ def _classify(col: str):
     return None
 
 def _find_local_db(case_dir: Path, norm_id: str) -> Path | None:
-    root = case_dir / f"{norm_id} TDC Sessions"
-    if not root.exists(): return None
-    cands = [p for p in root.rglob("local.db") if p.is_file()]
+    roots = [case_dir / "TDC Sessions"]
+    if norm_id:
+        roots.append(case_dir / f"{norm_id} TDC Sessions")
+    cands = []
+    for root in roots:
+        if root.exists():
+            cands.extend([p for p in root.rglob("local.db") if p.is_file()])
     if not cands: return None
     cands.sort(key=lambda p: p.stat().st_mtime, reverse=True)
     return cands[0]

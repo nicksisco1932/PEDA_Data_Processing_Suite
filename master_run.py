@@ -91,7 +91,7 @@ def main():
     case_dir = Path(args.case_dir)
     out_root = Path(args.out_root) if args.out_root else case_dir.parent
     case_id = normalize_case_id(case_dir.name) or case_id_from_path(case_dir)
-    default_log_root = out_root / case_id / f"{case_id} TDC Sessions" / "applog" / "Logs"
+    default_log_root = out_root / case_id / "TDC Sessions" / "applog" / "Logs"
     log_root = Path(args.log_root) if args.log_root else default_log_root
     logger = setup_logger(log_root)
     logger.info(f"Case dir: {case_dir}"); logger.info(f"Out root: {out_root}"); logger.info(f"Log root: {log_root}")
@@ -103,7 +103,7 @@ def main():
         if rc != 0: sys.exit(rc)
 
     if args.pdf_input:
-        misc_dir = case_dir / f"{case_id} Misc"
+        misc_dir = case_dir / "Misc"
         misc_dir.mkdir(parents=True, exist_ok=True)
         src = Path(args.pdf_input)
         dest = misc_dir / f"{case_id}_TreatmentReport.pdf"

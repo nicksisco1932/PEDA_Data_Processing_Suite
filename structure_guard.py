@@ -35,9 +35,9 @@ def _find_best_pdf(case_root: Path, case_id: str) -> Path | None:
 
 def verify(case_root: Path, case_id: str, allow_missing_pdf: bool = False) -> list[str]:
     errs: list[str] = []
-    misc = case_root / f"{case_id} Misc"
-    mr   = case_root / f"{case_id} MR DICOM"
-    tdc  = case_root / f"{case_id} TDC Sessions"
+    misc = case_root / "Misc"
+    mr   = case_root / "MR DICOM"
+    tdc  = case_root / "TDC Sessions"
     applog = tdc / "applog"
     logs = applog / "Logs"
 
@@ -70,9 +70,9 @@ def verify(case_root: Path, case_id: str, allow_missing_pdf: bool = False) -> li
 
 def fix(case_root: Path, case_id: str) -> list[str]:
     changes: list[str] = []
-    misc = _ensure_dir(case_root / f"{case_id} Misc")
-    mr   = _ensure_dir(case_root / f"{case_id} MR DICOM")
-    tdc  = _ensure_dir(case_root / f"{case_id} TDC Sessions")
+    misc = _ensure_dir(case_root / "Misc")
+    mr   = _ensure_dir(case_root / "MR DICOM")
+    tdc  = _ensure_dir(case_root / "TDC Sessions")
     applog = _ensure_dir(tdc / "applog")
     logs = _ensure_dir(applog / "Logs")
 
