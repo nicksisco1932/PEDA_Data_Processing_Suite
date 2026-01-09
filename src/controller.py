@@ -6,6 +6,8 @@ import platform
 import socket
 import sys
 import shutil
+import tempfile
+import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -40,6 +42,19 @@ def _assert_exists(path: Path, label: str) -> None:
         raise ProcessingError(f"Missing expected {label}: {path}")
 
 
+def _cleanup_ingest_dir(ingest_dir: Path, logger) -> None:
+    if not ingest_dir.exists():
+        return
+    for item in ingest_dir.iterdir():
+        try:
+            if item.is_dir():
+                shutil.rmtree(item, ignore_errors=True)
+            else:
+                item.unlink()
+        except Exception:
+            logger.warning("Failed to delete staged input: %s", item)
+
+
 def _build_plan(
     *,
     case_dir: Path,
@@ -56,6 +71,11 @@ def _build_plan(
     skip_mri: bool,
     skip_tdc: bool,
     clean_scratch: bool,
+    ingest_mode: str,
+    ingest_dir: Path,
+    ingest_attempts: int,
+    ingest_verify: bool,
+    ingest_keep_staged: bool,
 ) -> List[str]:
     plan: List[str] = []
     plan.append(f"Create case dir: {case_dir}")
@@ -65,20 +85,31 @@ def _build_plan(
     plan.append(f"Create output dir: {case_dir / (case + ' TDC Sessions') / 'applog' / 'Logs'}")
     plan.append(f"TDC Raw output dir created if TDC produces it: {case_dir / (case + ' TDC Sessions') / 'Raw'}")
     plan.append(f"Create scratch dir: {scratch}")
-    if not skip_mri and mri_input:
+    if ingest_mode == "stage_to_scratch":
+        plan.append(f"Create ingest dir: {ingest_dir}")
         plan.append(
-            f"Copy MRI zip to scratch backup: {mri_input} -> {scratch / (mri_input.name + '.bak')}"
+            f"Stage inputs to scratch (attempts={ingest_attempts} verify={ingest_verify} keep_staged={ingest_keep_staged})"
+        )
+    if not skip_mri and mri_input:
+        mri_source = str(mri_input)
+        if ingest_mode == "stage_to_scratch":
+            mri_source = "<staged_mri_zip>"
+        plan.append(
+            f"Copy MRI zip to scratch backup: {mri_source} -> {scratch / (mri_input.name + '.bak')}"
         )
         plan.append(f"Extract MRI zip into temp under: {scratch}")
         plan.append(f"Create MRI anonymized zip in scratch: {scratch / 'MRI_anonymized.zip'}")
         plan.append(f"Copy MRI final zip to: {mr_dir / (case + '_MRI.zip')}")
     if not skip_tdc and tdc_input:
+        tdc_source = str(tdc_input)
+        if ingest_mode == "stage_to_scratch":
+            tdc_source = "<staged_tdc_zip>"
         plan.append(
-            f"Copy TDC zip to scratch backup: {tdc_input} -> {scratch / (tdc_input.name + '.bak')}"
+            f"Copy TDC zip to scratch backup: {tdc_source} -> {scratch / (tdc_input.name + '.bak')}"
         )
         plan.append("Extract TDC zip into temp under scratch")
         plan.append("Copy Logs/ to case Misc/Logs if present")
-        plan.append("Stage TDC session in scratch/TDC_staged and pack top-level dirs into zips")
+        plan.append("Stage TDC session in scratch/TDC_staged as directories (no zips)")
         plan.append(f"Copy staged TDC session to: {tdc_dir / '<session_name>'}")
     if pdf_input:
         plan.append(
@@ -89,6 +120,65 @@ def _build_plan(
     if clean_scratch:
         plan.append(f"Delete scratch dir: {scratch}")
     return plan
+
+
+def _build_pre_peda_plan(
+    *,
+    case_root: Path,
+    mri_input: Path,
+    tdc_input: Path,
+    forbid_archives: bool,
+) -> List[str]:
+    plan: List[str] = []
+    plan.append(f"Pre-PEDA case_root: {case_root}")
+    plan.append(f"Unzip MRI -> normalize to: {case_root / 'MR DICOM'}")
+    plan.append(f"Unzip TDC -> normalize to: {case_root / 'TDC Sessions'}")
+    if forbid_archives:
+        plan.append("Fail if any archive exists under workspace_dir")
+    plan.append("Run Pre-PEDA validator and stop on success/failure")
+    return plan
+
+
+def _normalize_unzip_root(
+    extracted_root: Path,
+    target_dir: Path,
+    expected_name: str,
+    logger,
+) -> None:
+    if target_dir.exists():
+        shutil.rmtree(target_dir, ignore_errors=True)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    items = list(extracted_root.iterdir())
+    match = next(
+        (p for p in items if p.is_dir() and p.name.lower() == expected_name.lower()),
+        None,
+    )
+    if match:
+        shutil.rmtree(target_dir, ignore_errors=True)
+        shutil.move(str(match), str(target_dir))
+        items = [p for p in extracted_root.iterdir()]
+
+    for item in items:
+        dest = target_dir / item.name
+        shutil.move(str(item), str(dest))
+
+    logger.info("Normalized %s into %s", expected_name, target_dir)
+
+
+def _unzip_and_normalize(
+    zip_path: Path,
+    case_root: Path,
+    expected_name: str,
+    logger,
+) -> Path:
+    with tempfile.TemporaryDirectory(dir=case_root, prefix=f"{expected_name}_unzipped_") as tmpdir:
+        tmp = Path(tmpdir)
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zf.extractall(tmp)
+        target_dir = case_root / expected_name
+        _normalize_unzip_root(tmp, target_dir, expected_name, logger)
+        return target_dir
 
 
 def main() -> int:
@@ -113,11 +203,27 @@ def main() -> int:
     parser.add_argument("--log-level", help="Log level (INFO, DEBUG, etc.)")
     parser.add_argument("--run-id", help="Optional run identifier")
     parser.add_argument("--date-shift-days", type=int, help="TDC date shift (anonymization)")
+    parser.add_argument(
+        "--ingest-mode",
+        choices=["direct", "stage_to_scratch"],
+        help="Input ingest mode (default: direct)",
+    )
+    parser.add_argument("--ingest-attempts", type=int, help="Staging attempts")
+    add_bool_arg(parser, "ingest_verify", "Verify staged copy after each attempt")
+    add_bool_arg(parser, "ingest_keep_staged", "Keep staged zips after success")
+    add_bool_arg(
+        parser,
+        "ingest_source_stability_check",
+        "Hash source twice before staging; fail if mismatch",
+    )
     add_bool_arg(parser, "clean_scratch", "Delete scratch after success")
     add_bool_arg(parser, "skip_mri", "Skip MRI step")
     add_bool_arg(parser, "skip_tdc", "Skip TDC step")
     add_bool_arg(parser, "dry_run", "Only validate and log planned actions")
     add_bool_arg(parser, "hash_outputs", "Compute SHA-256 hashes for outputs")
+    add_bool_arg(parser, "pre_peda_validate", "Run Pre-PEDA validator and exit")
+    add_bool_arg(parser, "pre_peda_forbid_archives", "Fail if archives exist under workspace")
+    add_bool_arg(parser, "tdc_allow_archives", "Allow .zip files under TDC workspace")
     args = parser.parse_args()
 
     cli_overrides = {
@@ -137,6 +243,14 @@ def main() -> int:
         "run_id": args.run_id,
         "dry_run": args.dry_run,
         "hash_outputs": args.hash_outputs,
+        "pre_peda_validate": args.pre_peda_validate,
+        "pre_peda_forbid_archives": args.pre_peda_forbid_archives,
+        "tdc_allow_archives": args.tdc_allow_archives,
+        "ingest_mode": args.ingest_mode,
+        "ingest_attempts": args.ingest_attempts,
+        "ingest_verify": args.ingest_verify,
+        "ingest_keep_staged": args.ingest_keep_staged,
+        "ingest_source_stability_check": args.ingest_source_stability_check,
     }
 
     try:
@@ -166,6 +280,15 @@ def main() -> int:
     date_shift_days: int = cfg["date_shift_days"]
     clean_scratch: bool = cfg["clean_scratch"]
     hash_outputs: bool = cfg["hash_outputs"]
+    pre_peda_validate: bool = cfg["pre_peda_validate"]
+    pre_peda_forbid_archives: bool = cfg["pre_peda_forbid_archives"]
+    tdc_allow_archives: bool = cfg["tdc_allow_archives"]
+    ingest_mode: str = cfg["ingest_mode"]
+    ingest_attempts: int = cfg["ingest_attempts"]
+    ingest_verify: bool = cfg["ingest_verify"]
+    ingest_keep_staged: bool = cfg["ingest_keep_staged"]
+    ingest_source_stability_check: bool = cfg["ingest_source_stability_check"]
+    ingest_dir = scratch / "ingest"
 
     logger, log_file, rich_available = init_logger(
         case=case, run_id=run_id, log_dir=log_dir, log_level=log_level
@@ -200,24 +323,44 @@ def main() -> int:
     manifest_path = Path(manifest_dir) / manifest_name
     step_results: Dict[str, Any] = {}
     artifacts: Dict[str, Any] = {"inputs": {}, "outputs": {}}
-    planned_actions = _build_plan(
-        case_dir=case_dir,
-        scratch=scratch,
-        mr_dir=mr_dir,
-        tdc_dir=tdc_dir,
-        log_dir=log_dir,
-        manifest_path=manifest_path,
-        run_id=run_id,
-        case=case,
-        mri_input=Path(cfg["mri_input"]) if cfg["mri_input"] else None,
-        tdc_input=Path(cfg["tdc_input"]) if cfg["tdc_input"] else None,
-        pdf_input=Path(cfg["pdf_input"]) if cfg.get("pdf_input") else None,
-        skip_mri=skip_mri,
-        skip_tdc=skip_tdc,
-        clean_scratch=clean_scratch,
-    )
+    pre_peda_case_root = scratch / "pre_peda_case"
+    if pre_peda_validate:
+        planned_actions = _build_pre_peda_plan(
+            case_root=pre_peda_case_root,
+            mri_input=Path(cfg["mri_input"]) if cfg.get("mri_input") else Path(),
+            tdc_input=Path(cfg["tdc_input"]) if cfg.get("tdc_input") else Path(),
+            forbid_archives=pre_peda_forbid_archives,
+        )
+    else:
+        planned_actions = _build_plan(
+            case_dir=case_dir,
+            scratch=scratch,
+            mr_dir=mr_dir,
+            tdc_dir=tdc_dir,
+            log_dir=log_dir,
+            manifest_path=manifest_path,
+            run_id=run_id,
+            case=case,
+            mri_input=Path(cfg["mri_input"]) if cfg["mri_input"] else None,
+            tdc_input=Path(cfg["tdc_input"]) if cfg["tdc_input"] else None,
+            pdf_input=Path(cfg["pdf_input"]) if cfg.get("pdf_input") else None,
+            skip_mri=skip_mri,
+            skip_tdc=skip_tdc,
+            clean_scratch=clean_scratch,
+            ingest_mode=ingest_mode,
+            ingest_dir=ingest_dir,
+            ingest_attempts=ingest_attempts,
+            ingest_verify=ingest_verify,
+            ingest_keep_staged=ingest_keep_staged,
+        )
 
     status_mgr = StatusManager() if rich_available else None
+    pre_peda_result: Optional[Dict[str, Any]] = None
+    pre_peda_mode = pre_peda_validate
+    emit_final_status = not pre_peda_mode
+    ingest_results: Dict[str, Any] = {}
+    mri_input_path = Path(cfg["mri_input"]) if cfg.get("mri_input") else None
+    tdc_input_path = Path(cfg["tdc_input"]) if cfg.get("tdc_input") else None
     try:
         if status_mgr:
             status_mgr.__enter__()
@@ -230,11 +373,11 @@ def main() -> int:
             expected_tdc_name = f"{case} TDC Sessions"
             expected_misc_name = f"{case} Misc"
 
-            if not case_dir.exists() and dry_run:
+            if not case_dir.exists() and dry_run and not pre_peda_validate:
                 logger.warning(
                     "Case directory does not exist yet (dry-run): %s", case_dir
                 )
-            if dry_run:
+            if dry_run and not pre_peda_validate:
                 if not case_dir.exists():
                     logger.info(
                         "Would create output folders under case_dir=%s (%s, %s, %s)",
@@ -243,24 +386,32 @@ def main() -> int:
                         expected_mr_name,
                         expected_tdc_name,
                     )
-            else:
+            elif not pre_peda_validate:
                 case_dir.mkdir(parents=True, exist_ok=True)
                 misc_dir.mkdir(parents=True, exist_ok=True)
                 mr_dir.mkdir(parents=True, exist_ok=True)
                 tdc_dir.mkdir(parents=True, exist_ok=True)
                 (tdc_dir / "applog" / "Logs").mkdir(parents=True, exist_ok=True)
 
-            if not skip_mri:
-                if not cfg["mri_input"]:
-                    raise ValidationError("--mri-input required (or set skip_mri)")
+            if pre_peda_validate:
+                if not cfg.get("mri_input") or not cfg.get("tdc_input"):
+                    raise ValidationError("Pre-PEDA mode requires both --mri-input and --tdc-input")
                 _validate_zip(Path(cfg["mri_input"]), "MRI input")
-                artifacts["inputs"]["mri_input"] = Path(cfg["mri_input"])
-
-            if not skip_tdc:
-                if not cfg["tdc_input"]:
-                    raise ValidationError("--tdc-input required (or set skip_tdc)")
                 _validate_zip(Path(cfg["tdc_input"]), "TDC input")
+                artifacts["inputs"]["mri_input"] = Path(cfg["mri_input"])
                 artifacts["inputs"]["tdc_input"] = Path(cfg["tdc_input"])
+            else:
+                if not skip_mri:
+                    if not cfg["mri_input"]:
+                        raise ValidationError("--mri-input required (or set skip_mri)")
+                    _validate_zip(Path(cfg["mri_input"]), "MRI input")
+                    artifacts["inputs"]["mri_input"] = Path(cfg["mri_input"])
+
+                if not skip_tdc:
+                    if not cfg["tdc_input"]:
+                        raise ValidationError("--tdc-input required (or set skip_tdc)")
+                    _validate_zip(Path(cfg["tdc_input"]), "TDC input")
+                    artifacts["inputs"]["tdc_input"] = Path(cfg["tdc_input"])
 
             if cfg.get("pdf_input"):
                 pdf_path = Path(cfg["pdf_input"])
@@ -278,6 +429,94 @@ def main() -> int:
         for item in planned_actions:
             logger.info(" - %s", item)
 
+        if ingest_mode == "stage_to_scratch" and (not dry_run or pre_peda_validate):
+            from ingest import stage_input_zip
+
+            if (pre_peda_validate or not skip_mri) and mri_input_path:
+                res = stage_input_zip(
+                    mri_input_path,
+                    ingest_dir,
+                    attempts=ingest_attempts,
+                    verify=ingest_verify,
+                    source_stability_check=ingest_source_stability_check,
+                    logger=logger,
+                )
+                ingest_results["mri"] = res
+                if not res.get("ok"):
+                    raise ValidationError(res["errors"][-1])
+                logger.info(
+                    "STAGED INPUT: %s -> %s (sha256=%s)",
+                    res["source_zip"],
+                    res["staged_zip"],
+                    res.get("dst_sha256"),
+                )
+                mri_input_path = Path(res["staged_zip"])
+
+            if (pre_peda_validate or not skip_tdc) and tdc_input_path:
+                res = stage_input_zip(
+                    tdc_input_path,
+                    ingest_dir,
+                    attempts=ingest_attempts,
+                    verify=ingest_verify,
+                    source_stability_check=ingest_source_stability_check,
+                    logger=logger,
+                )
+                ingest_results["tdc"] = res
+                if not res.get("ok"):
+                    raise ValidationError(res["errors"][-1])
+                logger.info(
+                    "STAGED INPUT: %s -> %s (sha256=%s)",
+                    res["source_zip"],
+                    res["staged_zip"],
+                    res.get("dst_sha256"),
+                )
+                tdc_input_path = Path(res["staged_zip"])
+
+        if pre_peda_validate:
+            if dry_run:
+                logger.warning("Pre-PEDA validate ignores dry_run; inputs will be unzipped.")
+
+            with StepTimer(
+                logger=logger, step_name="Pre-PEDA unzip/normalize", results=step_results, status_mgr=status_mgr
+            ):
+                if pre_peda_case_root.exists():
+                    shutil.rmtree(pre_peda_case_root, ignore_errors=True)
+                pre_peda_case_root.mkdir(parents=True, exist_ok=True)
+
+                _unzip_and_normalize(
+                    mri_input_path,
+                    pre_peda_case_root,
+                    "MR DICOM",
+                    logger,
+                )
+                _unzip_and_normalize(
+                    tdc_input_path,
+                    pre_peda_case_root,
+                    "TDC Sessions",
+                    logger,
+                )
+
+            with StepTimer(
+                logger=logger, step_name="Pre-PEDA validate", results=step_results, status_mgr=status_mgr
+            ):
+                from pre_peda_validator import validate_pre_peda
+
+                pre_peda_result = validate_pre_peda(
+                    pre_peda_case_root,
+                    forbid_archives=pre_peda_forbid_archives,
+                    logger=logger,
+                )
+                if pre_peda_result["pre_peda_ready"]:
+                    logger.info("pre_peda_ready=true")
+                    logger.info("Pre-PEDA READY: %s", pre_peda_result.get("workspace_dir"))
+                    status = "SUCCESS"
+                    return_code = 0
+                else:
+                    status = "FAILED"
+                    return_code = ValidationError.code
+                sys.stdout.write("pre_peda_ready=true\n" if pre_peda_result["pre_peda_ready"] else "pre_peda_ready=false\n")
+                return return_code
+
         if dry_run:
             step_results["MRI"] = {"status": "SKIP", "duration_s": 0.0, "error": "dry-run"}
             step_results["TDC"] = {"status": "SKIP", "duration_s": 0.0, "error": "dry-run"}
@@ -289,7 +528,7 @@ def main() -> int:
                     mri_artifacts = MRI_proc.run(
                         root=root,
                         case=case,
-                        input_zip=Path(cfg["mri_input"]),
+                        input_zip=mri_input_path,
                         scratch=scratch,
                         logger=logger,
                         dry_run=False,
@@ -306,9 +545,10 @@ def main() -> int:
                     tdc_artifacts = TDC_proc.run(
                         root=root,
                         case=case,
-                        input_zip=Path(cfg["tdc_input"]),
+                        input_zip=tdc_input_path,
                         scratch=scratch,
                         date_shift_days=date_shift_days,
+                        allow_archives=tdc_allow_archives,
                         logger=logger,
                         dry_run=False,
                         step_results=step_results,
@@ -379,8 +619,13 @@ def main() -> int:
             logger=logger, step_name="Finalization", results=step_results, status_mgr=status_mgr
         ):
             if clean_scratch and not dry_run:
-                shutil.rmtree(scratch, ignore_errors=True)
-                logger.info("Scratch deleted: %s", scratch)
+                if ingest_mode == "stage_to_scratch" and ingest_keep_staged:
+                    logger.warning(
+                        "clean_scratch requested but ingest_keep_staged=true; skipping scratch cleanup."
+                    )
+                else:
+                    shutil.rmtree(scratch, ignore_errors=True)
+                    logger.info("Scratch deleted: %s", scratch)
 
         status = "SUCCESS"
         return_code = 0
@@ -400,6 +645,17 @@ def main() -> int:
         if status_mgr:
             status_mgr.__exit__(None, None, None)
 
+        if (
+            status == "SUCCESS"
+            and ingest_mode == "stage_to_scratch"
+            and not ingest_keep_staged
+            and ingest_results
+        ):
+            _cleanup_ingest_dir(ingest_dir, logger)
+            logger.info("Staged inputs removed: %s", ingest_dir)
+        elif ingest_mode == "stage_to_scratch" and ingest_keep_staged and ingest_results:
+            logger.info("Keeping staged inputs: %s", ingest_dir)
+
         manifest_payload = {
             "run_id": run_id,
             "timestamp": datetime.now().isoformat(timespec="seconds"),
@@ -417,6 +673,26 @@ def main() -> int:
             "versions": {},
             "log_file": str(log_file),
         }
+        if ingest_mode == "stage_to_scratch" and ingest_results:
+            manifest_payload["inputs_staged"] = {}
+            if ingest_results.get("mri"):
+                m = ingest_results["mri"]
+                manifest_payload["inputs_staged"]["mri"] = {
+                    "source_path": m.get("source_zip"),
+                    "staged_path": m.get("staged_zip"),
+                    "sha256": m.get("dst_sha256"),
+                    "source_sha256": m.get("src_sha256"),
+                }
+            if ingest_results.get("tdc"):
+                t = ingest_results["tdc"]
+                manifest_payload["inputs_staged"]["tdc"] = {
+                    "source_path": t.get("source_zip"),
+                    "staged_path": t.get("staged_zip"),
+                    "sha256": t.get("dst_sha256"),
+                    "source_sha256": t.get("src_sha256"),
+                }
+        if pre_peda_result is not None:
+            manifest_payload["pre_peda"] = pre_peda_result
 
         try:
             from importlib.metadata import version  # type: ignore
@@ -432,8 +708,11 @@ def main() -> int:
             manifest_payload["versions"]["yaml"] = None
 
         for label, path in artifacts.get("inputs", {}).items():
+            compute_hash = hash_outputs
+            if ingest_mode == "stage_to_scratch" and label in ("mri_input", "tdc_input"):
+                compute_hash = False
             manifest_payload["inputs"][label] = file_metadata(
-                Path(path), compute_hash=hash_outputs
+                Path(path), compute_hash=compute_hash
             )
 
         pdf_output = misc_dir / f"{case}_TreatmentReport.pdf"
@@ -513,7 +792,7 @@ def main() -> int:
                 manifest_meta.get("mtime"),
             )
 
-        if status == "SUCCESS":
+        if status == "SUCCESS" and not pre_peda_mode:
             logger.info("Canonical schema tree:")
             schema_lines = [
                 str(case_dir),
@@ -529,7 +808,8 @@ def main() -> int:
             for line in schema_lines:
                 logger.info(line)
 
-        sys.stdout.write(f"{status} case={case} run_id={run_id}\n")
+        if emit_final_status:
+            sys.stdout.write(f"{status} case={case} run_id={run_id}\n")
 
     return return_code
 

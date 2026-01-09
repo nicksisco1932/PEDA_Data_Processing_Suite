@@ -44,6 +44,17 @@ def _first_session_dir(root: Path) -> Path | None:
     return candidates[0] if candidates else None
 
 
+def _find_local_db(root: Path) -> Path | None:
+    for p in root.rglob("local.db"):
+        if p.is_file():
+            return p
+    return None
+
+
+def _find_archives(root: Path) -> List[Path]:
+    return [p for p in root.rglob("*.zip") if p.is_file()]
+
+
 def _extract_with_diagnostics(zf: zipfile.ZipFile, dest: Path, logger: logging.Logger) -> None:
     for member in zf.infolist():
         try:
@@ -68,6 +79,7 @@ def run(
     input_zip: Path,
     scratch: Path,
     date_shift_days: int = 137,
+    allow_archives: bool = False,
     logger: logging.Logger | None = None,
     dry_run: bool = False,
     step_results: Optional[Dict[str, Any]] = None,
@@ -137,36 +149,45 @@ def run(
 
             # 5) stage destination in scratch
             staged_session = staged_session_root / session_name
+            staged_session_root.mkdir(parents=True, exist_ok=True)
             if staged_session.exists():
                 shutil.rmtree(staged_session, ignore_errors=True)
-            staged_session.mkdir(parents=True, exist_ok=True)
 
-            # 6) process contents of the session
-            local_db_src = None
-            session_zips: List[Path] = []
-            for child in session_dir.iterdir():
-                if child.is_dir():
-                    dest_zip = staged_session / f"{child.name}.zip"
-                    _zip_dir(child, dest_zip)
-                    session_zips.append(dest_zip)
-                    log.info("Packed %s -> %s", child.name, dest_zip)
-                elif child.suffix.lower() == ".zip":
-                    dest_zip = staged_session / child.name
-                    shutil.copy2(child, dest_zip)
-                    session_zips.append(dest_zip)
-                    log.info("Copied zip -> %s", dest_zip)
-                elif _is_local_db(child):
-                    local_db_src = child
-                else:
-                    pass
+            # 6) stage the session as a directory tree (no recompression)
+            shutil.copytree(session_dir, staged_session)
+            log.info("Staged session: %s", staged_session)
 
-            if local_db_src is None:
-                local_db_src = next((p for p in session_dir.rglob("*") if _is_local_db(p)), None)
-            if local_db_src is None:
-                raise ValidationError("local.db not found inside session directory")
-
+            # 7) ensure local.db exists at workspace root
             staged_db = staged_session / "local.db"
-            shutil.copy2(local_db_src, staged_db)
+            if not staged_db.is_file():
+                alt_db = _find_local_db(staged_session)
+                if alt_db is None:
+                    raise ValidationError(f"local.db not found in staged session: {staged_session}")
+                shutil.copy2(alt_db, staged_db)
+                log.info("Copied local.db to workspace root: %s", staged_db)
+
+            # 8) ensure Raw is a directory (repair Raw.zip if needed)
+            raw_dir = staged_session / "Raw"
+            raw_zip = staged_session / "Raw.zip"
+            if raw_zip.exists():
+                raw_dir.mkdir(parents=True, exist_ok=True)
+                with zipfile.ZipFile(raw_zip, "r") as zf:
+                    _extract_with_diagnostics(zf, raw_dir, log)
+                raw_zip.unlink()
+                log.info("Extracted Raw.zip -> %s", raw_dir)
+            if raw_dir.exists() and not raw_dir.is_dir():
+                raise ValidationError(f"Expected directory missing: {raw_dir}")
+            if not raw_dir.exists():
+                raise ValidationError(f"Expected directory missing: {raw_dir}")
+
+            # 9) disallow archives under workspace by default
+            if not allow_archives:
+                archives = _find_archives(staged_session)
+                if archives:
+                    archive_list = "\n".join(str(p) for p in archives)
+                    raise ValidationError(
+                        "Unexpected archive found under workspace:\n" + archive_list
+                    )
 
             step_name = "local.db anonymization"
             if step_results is not None:
@@ -182,7 +203,7 @@ def run(
                 )
             log.info("Anonymized local.db (tables: %s)", len(summary.get("tables", [])))
 
-        # 8) copy staged session to final case tree
+        # 10) copy staged session to final case tree
         target = tdc_dir / session_name
         n = 1
         while target.exists():
@@ -203,5 +224,5 @@ def run(
         "staged_session": staged_session,
         "final_session": target,
         "local_db": staged_db,
-        "session_zips": session_zips,
+        "session_zips": [],
     }

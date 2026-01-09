@@ -42,6 +42,14 @@ DEFAULTS: Dict[str, Any] = {
     "run_id": None,
     "dry_run": False,
     "hash_outputs": False,
+    "pre_peda_validate": False,
+    "pre_peda_forbid_archives": False,
+    "tdc_allow_archives": False,
+    "ingest_mode": "direct",
+    "ingest_attempts": 3,
+    "ingest_verify": True,
+    "ingest_keep_staged": False,
+    "ingest_source_stability_check": False,
 }
 
 CANONICAL_LAYOUT = {
@@ -114,11 +122,12 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(cfg.get("case"), dict):
         return dict(cfg)
 
-    case_block = cfg.get("case", {})
-    inputs_block = cfg.get("inputs", {})
-    run_block = cfg.get("run", {})
-    logging_block = cfg.get("logging", {})
-    metadata_block = cfg.get("metadata", {})
+    case_block = cfg.get("case", {}) if isinstance(cfg.get("case"), dict) else {}
+    inputs_block = cfg.get("inputs", {}) if isinstance(cfg.get("inputs"), dict) else {}
+    run_block = cfg.get("run", {}) if isinstance(cfg.get("run"), dict) else {}
+    logging_block = cfg.get("logging", {}) if isinstance(cfg.get("logging"), dict) else {}
+    metadata_block = cfg.get("metadata", {}) if isinstance(cfg.get("metadata"), dict) else {}
+    ingest_block = run_block.get("ingest", {}) if isinstance(run_block.get("ingest"), dict) else {}
 
     case_id = case_block.get("id")
     root = case_block.get("root")
@@ -185,6 +194,36 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "policy", cfg.get("scratch_policy", DEFAULTS["scratch_policy"])
     )
 
+    pre_peda_validate = run_block.get("flags", {}).get(
+        "pre_peda_validate", cfg.get("pre_peda_validate", DEFAULTS["pre_peda_validate"])
+    )
+    pre_peda_forbid_archives = run_block.get(
+        "pre_peda_forbid_archives",
+        cfg.get("pre_peda_forbid_archives", DEFAULTS["pre_peda_forbid_archives"]),
+    )
+    tdc_allow_archives = run_block.get("flags", {}).get(
+        "tdc_allow_archives",
+        cfg.get("tdc_allow_archives", DEFAULTS["tdc_allow_archives"]),
+    )
+
+    ingest_mode = ingest_block.get("mode", cfg.get("ingest_mode", DEFAULTS["ingest_mode"]))
+    ingest_attempts = ingest_block.get(
+        "attempts", cfg.get("ingest_attempts", DEFAULTS["ingest_attempts"])
+    )
+    ingest_verify = ingest_block.get(
+        "verify", cfg.get("ingest_verify", DEFAULTS["ingest_verify"])
+    )
+    ingest_keep_staged = ingest_block.get(
+        "keep_staged", cfg.get("ingest_keep_staged", DEFAULTS["ingest_keep_staged"])
+    )
+    ingest_source_stability_check = ingest_block.get(
+        "source_stability_check",
+        cfg.get(
+            "ingest_source_stability_check",
+            DEFAULTS["ingest_source_stability_check"],
+        ),
+    )
+
     flat = {
         **cfg,
         "root": root or cfg.get("root"),
@@ -198,6 +237,14 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "manifest_name": manifest_name,
         "run_id": run_id or cfg.get("run_id"),
         "scratch_policy": scratch_policy,
+        "pre_peda_validate": pre_peda_validate,
+        "pre_peda_forbid_archives": pre_peda_forbid_archives,
+        "tdc_allow_archives": tdc_allow_archives,
+        "ingest_mode": ingest_mode,
+        "ingest_attempts": ingest_attempts,
+        "ingest_verify": ingest_verify,
+        "ingest_keep_staged": ingest_keep_staged,
+        "ingest_source_stability_check": ingest_source_stability_check,
         "date_shift_days": run_block.get("anonymization", {}).get(
             "date_shift_days", cfg.get("date_shift_days", DEFAULTS["date_shift_days"])
         ),
@@ -429,7 +476,19 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         raise ValidationError("Config missing required value: root")
     if not isinstance(cfg.get("date_shift_days"), int):
         raise ValidationError("date_shift_days must be an integer")
-    for key in ("clean_scratch", "skip_mri", "skip_tdc", "dry_run", "hash_outputs"):
+    for key in (
+        "clean_scratch",
+        "skip_mri",
+        "skip_tdc",
+        "dry_run",
+        "hash_outputs",
+        "pre_peda_validate",
+        "pre_peda_forbid_archives",
+        "tdc_allow_archives",
+        "ingest_verify",
+        "ingest_keep_staged",
+        "ingest_source_stability_check",
+    ):
         val = cfg.get(key)
         if not isinstance(val, bool):
             raise ValidationError(f"{key} must be a boolean")
@@ -438,6 +497,12 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     policy = cfg.get("scratch_policy", DEFAULTS["scratch_policy"])
     if policy not in ("local_temp", "case_root"):
         raise ValidationError("scratch_policy must be 'local_temp' or 'case_root'")
+    ingest_mode = cfg.get("ingest_mode", DEFAULTS["ingest_mode"])
+    if ingest_mode not in ("direct", "stage_to_scratch"):
+        raise ValidationError("ingest_mode must be 'direct' or 'stage_to_scratch'")
+    attempts = cfg.get("ingest_attempts", DEFAULTS["ingest_attempts"])
+    if not isinstance(attempts, int) or attempts < 1:
+        raise ValidationError("ingest_attempts must be an integer >= 1")
 
 
 def resolve_config(

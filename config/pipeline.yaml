@@ -16,9 +16,9 @@ case:
 inputs:
   mode: "explicit"                # "auto" | "explicit"
   explicit:
-    mri_zip: "E:\\093_01-098\\MR_093-01_098.zip"
-    tdc_zip: "E:\\093_01-098\\TDC_093-01_098.zip"
-    pdf_input: "E:\\093_01-098\\TreatmentReport_093-01_098.pdf"
+    mri_zip: "C:\\Users\\NicholasSisco\\Documents\\temp_dir\\093_01-098\\MR_093-01_098.zip"
+    tdc_zip: "C:\\Users\\NicholasSisco\\Documents\\temp_dir\\093_01-098\\TDC_093-01_098.zip"
+    pdf_input: "C:\\Users\\NicholasSisco\\Documents\\temp_dir\\093_01-098\\TreatmentReport_093-01_098.pdf"
   search:
     # Where to look, in order. These can be absolute or relative to case.root/case.dir.
     # Canonical defaults (if empty): case_dir\\incoming, case_dir, root\\incoming\\case_id.
@@ -45,13 +45,22 @@ run:
     dir: null                     # null => policy-based default
     clean_on_success: false
     policy: "local_temp"          # "local_temp" | "case_root"
+  ingest:
+    mode: "stage_to_scratch"                # "direct" | "stage_to_scratch"
+    attempts: 3                   # int >= 1
+    verify: true                  # verify staged copy after each attempt
+    keep_staged: false            # preserve staged zips on success
+    source_stability_check: false # hash source twice; fail if mismatch
   flags:
     skip_mri: false
     skip_tdc: false
     dry_run: false
+    pre_peda_validate: false
+    tdc_allow_archives: false
   anonymization:
     date_shift_days: 137
   hash_outputs: false             # If true, record fingerprints of final outputs in the manifest
+  pre_peda_forbid_archives: false # If true, fail if archives exist under the active workspace
 
 logging:
   dir: "{case_dir}\\{case_id} Misc\\Logs"
