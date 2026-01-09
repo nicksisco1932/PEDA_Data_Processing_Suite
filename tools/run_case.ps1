@@ -68,6 +68,8 @@ function Parse-IncomingFile {
     param([string]$InputFilePath)
     $result = [ordered]@{
         CaseDir = $null
+        CaseNum = $null
+        OutRoot = $null
         MriPath = $null
         TdcPath = $null
         PdfPath = $null
@@ -85,6 +87,8 @@ function Parse-IncomingFile {
     }
 
     $result.CaseDir = Get-IncomingValue $lines "case_dir"
+    $result.CaseNum = Get-IncomingValue $lines "case_num"
+    $result.OutRoot = Get-IncomingValue $lines "out_root"
     $result.MriPath = Get-IncomingValue $lines "mri_path"
     $result.TdcPath = Get-IncomingValue $lines "tdc_path"
     $result.PdfPath = Get-IncomingValue $lines "pdf_path"
@@ -148,10 +152,25 @@ if ($SelfTest) {
 
 $parsed = Parse-IncomingFile $InputFile
 $caseDir = $parsed.CaseDir
-if ($caseDir) {
+$caseNum = $parsed.CaseNum
+$outRoot = $parsed.OutRoot
+
+if (-not $caseNum -and $caseDir) {
     $caseNum = Split-Path $caseDir -Leaf
+}
+if (-not $outRoot -and $caseDir) {
     $outRoot = Split-Path $caseDir -Parent
 }
+if (-not $caseDir -and $caseNum -and $outRoot) {
+    $caseDir = Join-Path $outRoot $caseNum
+}
+if ($caseDir -and $caseNum -and $outRoot) {
+    $expectedCaseDir = Join-Path $outRoot $caseNum
+    if ((Normalize-PathInput $caseDir) -ne (Normalize-PathInput $expectedCaseDir)) {
+        Write-Warning "case_dir does not match out_root+case_num: $caseDir vs $expectedCaseDir"
+    }
+}
+
 $mriPath = Resolve-RelativePath $parsed.MriPath $caseDir
 $tdcPath = Resolve-RelativePath $parsed.TdcPath $caseDir
 $pdfPath = Resolve-RelativePath $parsed.PdfPath $caseDir
@@ -162,8 +181,11 @@ try {
     if (-not $caseDir) {
         throw "case_dir missing in $InputFile"
     }
-    if (-not (Test-Path $caseDir)) {
-        throw "case_dir does not exist: $caseDir"
+    if (-not $caseNum) {
+        throw "case_num missing in $InputFile"
+    }
+    if (-not $outRoot) {
+        throw "out_root missing in $InputFile"
     }
     if (-not $mriPath) {
         throw "mri_path missing in $InputFile (no filename inference)"
@@ -193,6 +215,10 @@ if ($parseOk) {
     Write-Host "FAIL: $failReason"
     Write-Host "Paste full paths verbatim (Copy as path) when prompted."
     Show-CaseListing $caseDir
+}
+
+if ($caseDir -and -not (Test-Path $caseDir)) {
+    Write-Warning "case_dir does not exist (will be created): $caseDir"
 }
 
 if (-not $caseNum) {
