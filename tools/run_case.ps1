@@ -64,6 +64,20 @@ function Get-IncomingValue {
     return $null
 }
 
+function Trim-After-Extension {
+    param(
+        [string]$Value,
+        [string]$Extension
+    )
+    if (-not $Value) { return $null }
+    $val = $Value
+    $extIndex = $val.ToLower().LastIndexOf($Extension.ToLower())
+    if ($extIndex -ge 0 -and ($extIndex + $Extension.Length) -lt $val.Length) {
+        return $val.Substring(0, $extIndex + $Extension.Length)
+    }
+    return $val
+}
+
 function Parse-IncomingFile {
     param([string]$InputFilePath)
     $result = [ordered]@{
@@ -155,6 +169,43 @@ $caseDir = $parsed.CaseDir
 $caseNum = $parsed.CaseNum
 $outRoot = $parsed.OutRoot
 
+$mriRaw = Trim-After-Extension $parsed.MriPath ".zip"
+$tdcRaw = Trim-After-Extension $parsed.TdcPath ".zip"
+$pdfRaw = Trim-After-Extension $parsed.PdfPath ".pdf"
+
+$mriPath = Resolve-RelativePath $mriRaw $caseDir
+$tdcPath = Resolve-RelativePath $tdcRaw $caseDir
+$pdfPath = Resolve-RelativePath $pdfRaw $caseDir
+
+if (-not $caseDir) {
+    $parents = @()
+    foreach ($p in @($mriPath, $tdcPath, $pdfPath)) {
+        if ($p) {
+            $parent = Split-Path $p -Parent
+            if ($parent) { $parents += $parent }
+        }
+    }
+    if ($parents.Count -gt 0) {
+        $first = $parents[0]
+        $allSame = $true
+        foreach ($p in $parents) {
+            if ((Normalize-PathInput $p) -ne (Normalize-PathInput $first)) {
+                $allSame = $false
+                break
+            }
+        }
+        if ($allSame) {
+            $caseDir = $first
+        } elseif ($mriPath) {
+            $caseDir = Split-Path $mriPath -Parent
+        } elseif ($tdcPath) {
+            $caseDir = Split-Path $tdcPath -Parent
+        } elseif ($pdfPath) {
+            $caseDir = Split-Path $pdfPath -Parent
+        }
+    }
+}
+
 if (-not $caseNum -and $caseDir) {
     $caseNum = Split-Path $caseDir -Leaf
 }
@@ -171,21 +222,14 @@ if ($caseDir -and $caseNum -and $outRoot) {
     }
 }
 
-$mriPath = Resolve-RelativePath $parsed.MriPath $caseDir
-$tdcPath = Resolve-RelativePath $parsed.TdcPath $caseDir
-$pdfPath = Resolve-RelativePath $parsed.PdfPath $caseDir
-
 $parseOk = $true
 $failReason = $null
 try {
     if (-not $caseDir) {
-        throw "case_dir missing in $InputFile"
-    }
-    if (-not $caseNum) {
         throw "case_num missing in $InputFile"
     }
     if (-not $outRoot) {
-        throw "out_root missing in $InputFile"
+        throw "out_root missing in $InputFile (cannot derive from inputs)"
     }
     if (-not $mriPath) {
         throw "mri_path missing in $InputFile (no filename inference)"

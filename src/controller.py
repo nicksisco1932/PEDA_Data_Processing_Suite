@@ -83,7 +83,7 @@ def _build_plan(
         plan.append(
             f"Copy MRI zip to scratch backup: {mri_input} -> {scratch / (mri_input.name + '.bak')}"
         )
-        final_dir = mr_dir / f"{mri_input.stem} (UNZIPPED)"
+        final_dir = mr_dir / mri_input.stem
         plan.append(f"Extract MRI zip into final dir: {final_dir}")
     if not skip_tdc and tdc_input:
         plan.append(

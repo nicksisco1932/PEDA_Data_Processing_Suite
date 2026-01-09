@@ -1,7 +1,7 @@
-# Paste a single case directory path on the first non-empty line.
+# Inputs
 case_dir: B:\scratch\093_01-098
 case_num: 093_01-098
 out_root: B:\temp_work_delete
 mri_path: B:\temp_work_delete\093_01-098\MR_093-01_098.zip
 tdc_path: B:\temp_work_delete\093_01-098\TDC_093-01_098.zip
-pdf_path: B:\temp_work_delete\093_01-098\TreatmentReport_093-01_098.pdf(.venv) PS C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite> powershell -ExecutionPolicy Bypass -File tools\run_case.ps1
+pdf_path: B:\temp_work_delete\093_01-098\TreatmentReport_093-01_098.pdf

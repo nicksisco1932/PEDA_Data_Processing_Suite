@@ -61,6 +61,8 @@ function Parse-IncomingFile {
     param([string]$InputFilePath)
     $result = [ordered]@{
         CaseDir = $null
+        CaseNum = $null
+        OutRoot = $null
         MriPath = $null
         TdcPath = $null
         PdfPath = $null
@@ -86,6 +88,8 @@ function Parse-IncomingFile {
             $val = Normalize-PathInput $matches[2]
             switch ($key) {
                 "case_dir" { $result.CaseDir = $val }
+                "case_num" { $result.CaseNum = $val }
+                "out_root" { $result.OutRoot = $val }
                 "mri_path" { $result.MriPath = $val }
                 "tdc_path" { $result.TdcPath = $val }
                 "pdf_path" { $result.PdfPath = $val }
@@ -100,13 +104,8 @@ function Parse-IncomingFile {
 
 $parsed = Parse-IncomingFile $InputFile
 $caseDir = $parsed.CaseDir
-if (-not $caseDir) {
-    Write-Error "case_dir missing in: $InputFile"
-    exit 2
-}
-
-$caseNum = Split-Path $caseDir -Leaf
-$outRoot = Split-Path $caseDir -Parent
+$caseNum = $parsed.CaseNum
+$outRoot = $parsed.OutRoot
 
 $mriRaw = Trim-After-Extension $parsed.MriPath ".zip"
 $tdcRaw = Trim-After-Extension $parsed.TdcPath ".zip"
@@ -115,6 +114,43 @@ $pdfRaw = Trim-After-Extension $parsed.PdfPath ".pdf"
 $mriPath = Resolve-RelativePath $mriRaw $caseDir
 $tdcPath = Resolve-RelativePath $tdcRaw $caseDir
 $pdfPath = Resolve-RelativePath $pdfRaw $caseDir
+
+if (-not $caseDir) {
+    $parents = @()
+    foreach ($p in @($mriPath, $tdcPath, $pdfPath)) {
+        if ($p) {
+            $parent = Split-Path $p -Parent
+            if ($parent) { $parents += $parent }
+        }
+    }
+    if ($parents.Count -gt 0) {
+        $first = $parents[0]
+        $allSame = $true
+        foreach ($p in $parents) {
+            if ((Normalize-PathInput $p) -ne (Normalize-PathInput $first)) {
+                $allSame = $false
+                break
+            }
+        }
+        if ($allSame) {
+            $caseDir = $first
+        } elseif ($mriPath) {
+            $caseDir = Split-Path $mriPath -Parent
+        } elseif ($tdcPath) {
+            $caseDir = Split-Path $tdcPath -Parent
+        } elseif ($pdfPath) {
+            $caseDir = Split-Path $pdfPath -Parent
+        }
+    }
+}
+
+if (-not $outRoot -and $caseDir) {
+    $outRoot = Split-Path $caseDir -Parent
+}
+
+if (-not $caseNum -and $caseDir) {
+    $caseNum = Split-Path $caseDir -Leaf
+}
 
 $mriSuggestion = $null
 $tdcSuggestion = $null
@@ -142,13 +178,9 @@ if (Test-Path $caseDir) {
     }
 }
 
-if ($caseNum -notmatch '^\d{3}[_-]\d{2}[_-]\d{3,}$') {
-    Write-Warning "case_num does not match canonical pattern NNN_NN-NNN: $caseNum"
-}
-
-Write-Host "case_dir: $caseDir"
-Write-Host "case_num: $caseNum"
-Write-Host "out_root: $outRoot"
+Write-Host ("case_dir: " + ($(if ($caseDir) { $caseDir } else { "<missing>" })))
+Write-Host ("case_num: " + ($(if ($caseNum) { $caseNum } else { "<missing>" })))
+Write-Host ("out_root: " + ($(if ($outRoot) { $outRoot } else { "<missing>" })))
 
 $mriCandidatePath = $null
 if ($mriPath) {
@@ -177,7 +209,3 @@ $pdfOut = if ($pdfCandidatePath -and (Test-Path -LiteralPath $pdfCandidatePath -
 Write-Host "mri_path: $mriOut"
 Write-Host "tdc_path: $tdcOut"
 Write-Host "pdf_path: $pdfOut"
-
-if (-not (Test-Path $caseDir)) {
-    Write-Warning "case_dir does not exist: $caseDir"
-}

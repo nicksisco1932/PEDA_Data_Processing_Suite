@@ -1,6 +1,6 @@
 # PURPOSE: Process MRI zip input and produce the canonical MR DICOM unzipped output.
 # INPUTS: MRI zip path, scratch/output dirs, and run flags.
-# OUTPUTS: <case_dir>/MR DICOM/<input_zip.stem> (UNZIPPED) directory.
+# OUTPUTS: <case_dir>/MR DICOM/<input_zip.stem> directory.
 # NOTES: Uses archive_utils with optional 7-Zip preference.
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def run(
         raise ValidationError(f"MRI input not found or not .zip: {input_zip}")
 
     bak = scratch / (input_zip.name + ".bak")
-    final_dir = mr_dir / f"{input_zip.stem} (UNZIPPED)"
+    final_dir = mr_dir / input_zip.stem
 
     if dry_run:
         log.info("MRI dry-run: would copy and extract %s", input_zip)
