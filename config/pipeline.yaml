@@ -50,6 +50,7 @@ run:
     skip_tdc: false
     dry_run: false
     test_mode: false
+    allow_workspace_zips: false
   anonymization:
     date_shift_days: 137
   hash_outputs: false             # If true, record fingerprints of final outputs in the manifest

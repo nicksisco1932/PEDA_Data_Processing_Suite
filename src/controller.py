@@ -26,13 +26,16 @@ from logutil import (
 )
 from manifest import file_metadata, write_manifest
 from pipeline_config import add_bool_arg, resolve_config
+from src.path_utils import sanitize_path_str
 
 
-def _validate_zip(path: Path, label: str) -> None:
+def _validate_zip(path: Path, label: str, raw_value: Optional[str] = None) -> None:
     if not path.exists() or not path.is_file():
-        raise ValidationError(f"{label} not found: {path}")
+        extra = f" raw={raw_value!r}" if raw_value else ""
+        raise ValidationError(f"{label} not found: {path}.{extra}")
     if path.suffix.lower() != ".zip":
-        raise ValidationError(f"{label} must be a .zip: {path}")
+        extra = f" raw={raw_value!r}" if raw_value else ""
+        raise ValidationError(f"{label} must be a .zip: {path}.{extra}")
 
 
 def _assert_exists(path: Path, label: str) -> None:
@@ -55,6 +58,8 @@ def _build_plan(
     pdf_input: Optional[Path],
     skip_mri: bool,
     skip_tdc: bool,
+    test_mode: bool,
+    allow_workspace_zips: bool,
     clean_scratch: bool,
 ) -> List[str]:
     plan: List[str] = []
@@ -78,7 +83,16 @@ def _build_plan(
         )
         plan.append("Extract TDC zip into temp under scratch")
         plan.append("Copy Logs/ to case Misc/Logs if present")
-        plan.append("Stage TDC session in scratch/TDC_staged and pack top-level dirs into zips")
+        plan.append(
+            "Stage TDC session in scratch/TDC_staged and copy top-level dirs as directories"
+        )
+        plan.append("Expand Raw.zip or timestamp zips into directories if present")
+        if allow_workspace_zips:
+            plan.append("Allow zip archives under TDC workspace (override enabled)")
+        else:
+            plan.append("Disallow zip archives under TDC workspace")
+        if test_mode:
+            plan.append("Test-mode: keep staging lightweight (no zipping)")
         plan.append(f"Copy staged TDC session to: {tdc_dir / '<session_name>'}")
     if pdf_input:
         plan.append(
@@ -119,6 +133,9 @@ def main() -> int:
     add_bool_arg(parser, "dry_run", "Only validate and log planned actions")
     add_bool_arg(parser, "hash_outputs", "Compute SHA-256 hashes for outputs")
     add_bool_arg(parser, "test_mode", "Fast test-mode (skip heavy steps)")
+    add_bool_arg(
+        parser, "allow_workspace_zips", "Allow zip archives under TDC workspace"
+    )
     args = parser.parse_args()
 
     cli_overrides = {
@@ -139,11 +156,12 @@ def main() -> int:
         "dry_run": args.dry_run,
         "hash_outputs": args.hash_outputs,
         "test_mode": args.test_mode,
+        "allow_workspace_zips": args.allow_workspace_zips,
     }
 
     try:
         cfg, run_id = resolve_config(
-            config_path=Path(args.config) if args.config else None,
+            config_path=Path(sanitize_path_str(args.config)) if args.config else None,
             cli_overrides=cli_overrides,
         )
     except ValidationError as exc:
@@ -169,6 +187,17 @@ def main() -> int:
     clean_scratch: bool = cfg["clean_scratch"]
     hash_outputs: bool = cfg["hash_outputs"]
     test_mode: bool = cfg["test_mode"]
+    allow_workspace_zips: bool = cfg["allow_workspace_zips"]
+    run_block = cfg.get("run")
+    if not isinstance(run_block, dict):
+        run_block = {}
+    flags = run_block.get("flags")
+    if not isinstance(flags, dict):
+        flags = {}
+        run_block["flags"] = flags
+    flags["test_mode"] = test_mode
+    flags["allow_workspace_zips"] = allow_workspace_zips
+    cfg["run"] = run_block
 
     logger, log_file, rich_available = init_logger(
         case=case, run_id=run_id, log_dir=log_dir, log_level=log_level
@@ -176,6 +205,8 @@ def main() -> int:
     logger.info("Run start case=%s run_id=%s", case, run_id)
     logger.info("Dry run: %s", dry_run)
     logger.info("Test mode: %s", test_mode)
+    logger.info("Allow workspace zips: %s", allow_workspace_zips)
+    raw_paths = cfg.get("_raw_paths") if isinstance(cfg.get("_raw_paths"), dict) else {}
     logger.info("Resolved inputs: mri=%s tdc=%s", cfg.get("mri_input"), cfg.get("tdc_input"))
     auto_info = cfg.get("auto_discovery") or {}
     for key in ("mri", "tdc"):
@@ -218,6 +249,8 @@ def main() -> int:
         pdf_input=Path(cfg["pdf_input"]) if cfg.get("pdf_input") else None,
         skip_mri=skip_mri,
         skip_tdc=skip_tdc,
+        test_mode=test_mode,
+        allow_workspace_zips=allow_workspace_zips,
         clean_scratch=clean_scratch,
     )
 
@@ -276,13 +309,17 @@ def main() -> int:
             if not skip_mri:
                 if not cfg["mri_input"]:
                     raise ValidationError("--mri-input required (or set skip_mri)")
-                _validate_zip(Path(cfg["mri_input"]), "MRI input")
+                _validate_zip(
+                    Path(cfg["mri_input"]), "MRI input", raw_paths.get("mri_input")
+                )
                 artifacts["inputs"]["mri_input"] = Path(cfg["mri_input"])
 
             if not skip_tdc:
                 if not cfg["tdc_input"]:
                     raise ValidationError("--tdc-input required (or set skip_tdc)")
-                _validate_zip(Path(cfg["tdc_input"]), "TDC input")
+                _validate_zip(
+                    Path(cfg["tdc_input"]), "TDC input", raw_paths.get("tdc_input")
+                )
                 artifacts["inputs"]["tdc_input"] = Path(cfg["tdc_input"])
 
             if cfg.get("pdf_input"):
@@ -335,6 +372,7 @@ def main() -> int:
                         logger=logger,
                         dry_run=False,
                         test_mode=test_mode,
+                        allow_workspace_zips=allow_workspace_zips,
                         step_results=step_results,
                         status_mgr=status_mgr,
                     )

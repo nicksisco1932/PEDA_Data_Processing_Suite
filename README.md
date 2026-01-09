@@ -17,6 +17,10 @@ python tools/generate_fixtures.py
 pytest -q
 ```
 
+Notes:
+- Quoted Windows paths (Copy as path) are accepted in YAML and CLI.
+- 7-Zip is optional but preferred; set `SEVEN_ZIP` or install to `C:\Program Files\7-Zip\7z.exe`.
+
 ---
 
 ## 🧩 Components

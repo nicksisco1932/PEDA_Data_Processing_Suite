@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, List
 
 from logutil import ValidationError
+from src.path_utils import sanitize_path_str
 
 PATH_KEYS = {
     "root",
@@ -43,6 +44,7 @@ DEFAULTS: Dict[str, Any] = {
     "dry_run": False,
     "hash_outputs": False,
     "test_mode": False,
+    "allow_workspace_zips": False,
 }
 
 CANONICAL_LAYOUT = {
@@ -73,6 +75,37 @@ def _case_id_aliases(case_id: Optional[str]) -> List[str]:
         for sep2 in ("_", "-"):
             aliases.append(f"{p1}{sep1}{p2}{sep2}{p3}")
     return list(dict.fromkeys(aliases))
+
+
+def _sanitize_path_value(value: Optional[str], key: str, raw_paths: Dict[str, str]) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        raw_paths.setdefault(key, value)
+        try:
+            return sanitize_path_str(value)
+        except ValueError as exc:
+            raise ValidationError(
+                f"Invalid path for {key}: raw={value!r} error={exc}"
+            ) from exc
+    return str(value)
+
+
+def _sanitize_paths(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(cfg)
+    raw_paths = out.get("_raw_paths")
+    raw_paths = dict(raw_paths) if isinstance(raw_paths, dict) else {}
+    for key in PATH_KEYS:
+        val = out.get(key)
+        if val is None:
+            continue
+        if isinstance(val, Path):
+            continue
+        if isinstance(val, str):
+            out[key] = _sanitize_path_value(val, key, raw_paths)
+    if raw_paths:
+        out["_raw_paths"] = raw_paths
+    return out
 
 
 def _load_yaml(path: Path) -> Dict[str, Any]:
@@ -115,6 +148,9 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(cfg.get("case"), dict):
         return dict(cfg)
 
+    raw_paths = cfg.get("_raw_paths")
+    raw_paths = dict(raw_paths) if isinstance(raw_paths, dict) else {}
+
     case_block = cfg.get("case", {})
     inputs_block = cfg.get("inputs", {})
     run_block = cfg.get("run", {})
@@ -122,8 +158,8 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     metadata_block = cfg.get("metadata", {})
 
     case_id = case_block.get("id")
-    root = case_block.get("root")
-    case_dir = case_block.get("dir")
+    root = _sanitize_path_value(case_block.get("root"), "root", raw_paths)
+    case_dir = _sanitize_path_value(case_block.get("dir"), "case_dir", raw_paths)
 
     mapping = {}
     if case_id:
@@ -218,6 +254,10 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "test_mode": run_block.get("flags", {}).get(
             "test_mode", cfg.get("test_mode", DEFAULTS["test_mode"])
         ),
+        "allow_workspace_zips": run_block.get("flags", {}).get(
+            "allow_workspace_zips",
+            cfg.get("allow_workspace_zips", DEFAULTS["allow_workspace_zips"]),
+        ),
         "hash_outputs": run_block.get(
             "hash_outputs", cfg.get("hash_outputs", DEFAULTS["hash_outputs"])
         ),
@@ -227,6 +267,7 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "inputs": inputs_block,
         "metadata": metadata_block,
         "logging": logging_block,
+        "_raw_paths": raw_paths if raw_paths else cfg.get("_raw_paths"),
     }
     return flat
 
@@ -335,6 +376,10 @@ def _resolve_auto_inputs(cfg: Dict[str, Any]) -> Dict[str, Any]:
                 "case_dir": str(cfg.get("case_dir") or ""),
             },
         )
+        try:
+            r = sanitize_path_str(r)
+        except ValueError as exc:
+            raise ValidationError(f"Invalid search root: raw={r!r} error={exc}") from exc
         rp = Path(r)
         if not rp.is_absolute() and case_dir:
             rp = case_dir / rp
@@ -433,7 +478,15 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         raise ValidationError("Config missing required value: root")
     if not isinstance(cfg.get("date_shift_days"), int):
         raise ValidationError("date_shift_days must be an integer")
-    for key in ("clean_scratch", "skip_mri", "skip_tdc", "dry_run", "hash_outputs", "test_mode"):
+    for key in (
+        "clean_scratch",
+        "skip_mri",
+        "skip_tdc",
+        "dry_run",
+        "hash_outputs",
+        "test_mode",
+        "allow_workspace_zips",
+    ):
         val = cfg.get(key)
         if not isinstance(val, bool):
             raise ValidationError(f"{key} must be a boolean")
@@ -449,6 +502,15 @@ def resolve_config(
     config_path: Optional[Path],
     cli_overrides: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], str]:
+    cli_raw_paths: Dict[str, str] = {}
+    if cli_overrides:
+        sanitized_overrides = dict(cli_overrides)
+        for key, val in cli_overrides.items():
+            if key in PATH_KEYS and isinstance(val, str):
+                cli_raw_paths[key] = val
+                sanitized_overrides[key] = _sanitize_path_value(val, key, cli_raw_paths)
+        cli_overrides = sanitized_overrides
+
     if config_path:
         if not config_path.exists():
             raise ValidationError(f"Config file not found: {config_path}")
@@ -470,6 +532,13 @@ def resolve_config(
     merged = _expand_templates(merged)
     merged = _resolve_scratch(merged)
     merged = _resolve_auto_inputs(merged)
+    merged = _sanitize_paths(merged)
+    if cli_raw_paths:
+        raw_paths = merged.get("_raw_paths")
+        raw_paths = dict(raw_paths) if isinstance(raw_paths, dict) else {}
+        for key, val in cli_raw_paths.items():
+            raw_paths.setdefault(key, val)
+        merged["_raw_paths"] = raw_paths
     merged = _normalize_paths(merged)
 
     _validate_config(merged)

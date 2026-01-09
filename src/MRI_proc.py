@@ -5,8 +5,6 @@ from pathlib import Path
 import logging
 import shutil
 import tempfile
-import zipfile
-import os
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,16 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from logutil import ValidationError, ProcessingError, copy_with_integrity
-
-
-def _zip_dir(src_dir: Path, dest_zip: Path) -> None:
-    dest_zip.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(dest_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        for root, _, files in os.walk(src_dir):
-            rp = Path(root)
-            for name in files:
-                p = rp / name
-                zf.write(p, arcname=str(p.relative_to(src_dir)))
+from src.archive_utils import create_zip_from_dir, extract_archive
 
 
 def run(
@@ -65,15 +54,15 @@ def run(
         # 2) unzip -> (future anonymize) -> rezip into scratch/MRI_anonymized.zip
         with tempfile.TemporaryDirectory(dir=scratch, prefix="mri_unzipped_") as tmpdir:
             tmp = Path(tmpdir)
-            with zipfile.ZipFile(bak, "r") as zf:
-                zf.extractall(tmp)
+            try:
+                extract_archive(bak, tmp, prefer_7z=True)
+            except Exception as exc:
+                raise ProcessingError(f"MRI extraction failed: {exc}") from exc
             log.info("MRI extracted: %s", tmp)
 
             # (anonymization would happen here later, operating on files under `tmp`)
 
-            if out_zip.exists():
-                out_zip.unlink()
-            _zip_dir(tmp, out_zip)
+            create_zip_from_dir(tmp, out_zip, prefer_7z=True)
             log.info("MRI repacked: %s", out_zip)
 
         # 3) copy final to case MR folder as <case>_MRI.zip

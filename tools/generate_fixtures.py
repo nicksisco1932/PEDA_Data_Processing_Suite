@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import shutil
 import sqlite3
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -50,24 +51,28 @@ def _write_min_db(path: Path) -> None:
 
 
 def _write_tdc_fixture() -> None:
-    staging = FIXTURES_DIR / "_tdc_tmp"
-    if staging.exists():
-        for p in staging.rglob("*"):
-            if p.is_file():
-                p.unlink()
-        for p in sorted(staging.rglob("*"), reverse=True):
-            if p.is_dir():
-                p.rmdir()
-    session_root = staging / "TDC Sessions" / "_TEST_SESSION"
-    (session_root / "Raw").mkdir(parents=True, exist_ok=True)
-    (session_root / "Raw" / "dummy.txt").write_text("raw", encoding="utf-8")
-    (session_root / "2025-01-01--00-00-00").mkdir(parents=True, exist_ok=True)
-    (session_root / "2025-01-01--00-00-00" / "dummy.txt").write_text(
-        "timestamp", encoding="utf-8"
-    )
-    _write_min_db(session_root / "local.db")
-    _zip_dir(staging, TDC_ZIP)
-    shutil.rmtree(staging, ignore_errors=True)
+    if TDC_ZIP.exists():
+        TDC_ZIP.unlink()
+    TDC_ZIP.parent.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp_root = Path(td)
+        db_path = tmp_root / "local.db"
+        _write_min_db(db_path)
+
+        with zipfile.ZipFile(TDC_ZIP, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.write(
+                db_path,
+                arcname="TDC Sessions/_TEST_SESSION/local.db",
+            )
+            zf.writestr(
+                "TDC Sessions/_TEST_SESSION/Raw/dummy.txt",
+                "raw",
+            )
+            zf.writestr(
+                "TDC Sessions/_TEST_SESSION/2025-01-01--00-00-00/dummy.txt",
+                "timestamp",
+            )
 
 
 def main() -> int:
