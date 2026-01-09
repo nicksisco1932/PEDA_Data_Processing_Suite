@@ -636,6 +636,62 @@ def _run_self_test(*, keep_temp: bool = False) -> int:
     return 0
 
 
+def build_manifest_payload(
+    *,
+    cfg_for_manifest: Dict[str, Any],
+    run_id: str,
+    case: str,
+    status: str,
+    test_mode: bool,
+    log_file: Path,
+    planned_actions: List[str],
+    step_results: Dict[str, Any],
+    inputs: Dict[str, Path],
+    backups: Dict[str, Any],
+    outputs_meta: Dict[str, Any],
+    hash_outputs: bool,
+    dry_run: bool,
+) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {
+        "run_id": run_id,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "case": case,
+        "status": status,
+        "test_mode": test_mode,
+        "hostname": socket.gethostname(),
+        "user": getpass.getuser(),
+        "platform": platform.platform(),
+        "python_version": platform.python_version(),
+        "config": {
+            k: str(v) if isinstance(v, Path) else v for k, v in cfg_for_manifest.items()
+        },
+        "steps": step_results,
+        "plan": planned_actions,
+        "inputs": {},
+        "outputs": {},
+        "versions": {"rich": None, "yaml": None},
+        "log_file": str(log_file),
+    }
+
+    for label, path in inputs.items():
+        payload["inputs"][label] = file_metadata(
+            Path(path), compute_hash=hash_outputs
+        )
+
+    for label, info in backups.items():
+        payload["inputs"][label] = info
+
+    for key, meta in outputs_meta.items():
+        payload["outputs"][key] = meta
+
+    payload["outputs"]["log_file"] = file_metadata(log_file, compute_hash=False)
+
+    if dry_run:
+        payload["outputs"]["note"] = "dry-run: outputs not created"
+
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="PEDA mini-pipeline controller")
     parser.add_argument("--config", help="Path to YAML/JSON config file")
@@ -731,17 +787,11 @@ def main() -> int:
     test_mode: bool = cfg["test_mode"]
     allow_workspace_zips: bool = cfg["allow_workspace_zips"]
     legacy_filename_rules: bool = cfg["legacy_filename_rules"]
-    run_block = cfg.get("run")
-    if not isinstance(run_block, dict):
-        run_block = {}
-    flags = run_block.get("flags")
-    if not isinstance(flags, dict):
-        flags = {}
-        run_block["flags"] = flags
-    flags["test_mode"] = test_mode
-    flags["allow_workspace_zips"] = allow_workspace_zips
-    flags["legacy_filename_rules"] = legacy_filename_rules
-    cfg["run"] = run_block
+    run_flags = {
+        "test_mode": test_mode,
+        "allow_workspace_zips": allow_workspace_zips,
+        "legacy_filename_rules": legacy_filename_rules,
+    }
 
     logger, log_file, rich_available = init_logger(
         case=case, run_id=run_id, log_dir=log_dir, log_level=log_level
@@ -758,7 +808,8 @@ def main() -> int:
     manifest_name = cfg.get("manifest_name") or f"{case}__{run_id}__manifest.json"
     manifest_path = Path(manifest_dir) / manifest_name
     step_results: Dict[str, Any] = {}
-    artifacts: Dict[str, Any] = {"inputs": {}, "outputs": {}}
+    inputs: Dict[str, Path] = {}
+    artifacts: Dict[str, Any] = {"outputs": {}}
     planned_actions = _build_plan(
         case_dir=case_dir,
         misc_dir=misc_dir,
@@ -781,6 +832,19 @@ def main() -> int:
     )
 
     status_mgr = StatusManager() if rich_available else None
+    pdf_input_path: Optional[Path] = None
+
+    def _require_zip_input(
+        cfg_key: str,
+        label: str,
+        raw_key: str,
+        missing_msg: str,
+    ) -> None:
+        if not cfg[cfg_key]:
+            raise ValidationError(missing_msg)
+        _validate_zip(Path(cfg[cfg_key]), label, raw_paths.get(raw_key))
+        inputs[cfg_key] = Path(cfg[cfg_key])
+
     try:
         if status_mgr:
             status_mgr.__enter__()
@@ -833,36 +897,34 @@ def main() -> int:
                 (tdc_dir / "applog" / "Logs").mkdir(parents=True, exist_ok=True)
 
             if not skip_mri:
-                if not cfg["mri_input"]:
-                    raise ValidationError("--mri-input required (or set skip_mri)")
-                _validate_zip(
-                    Path(cfg["mri_input"]), "MRI input", raw_paths.get("mri_input")
+                _require_zip_input(
+                    "mri_input",
+                    "MRI input",
+                    "mri_input",
+                    "--mri-input required (or set skip_mri)",
                 )
-                artifacts["inputs"]["mri_input"] = Path(cfg["mri_input"])
 
             if not skip_tdc:
-                if not cfg["tdc_input"]:
-                    raise ValidationError("--tdc-input required (or set skip_tdc)")
-                _validate_zip(
-                    Path(cfg["tdc_input"]), "TDC input", raw_paths.get("tdc_input")
+                _require_zip_input(
+                    "tdc_input",
+                    "TDC input",
+                    "tdc_input",
+                    "--tdc-input required (or set skip_tdc)",
                 )
-                artifacts["inputs"]["tdc_input"] = Path(cfg["tdc_input"])
 
             if cfg.get("pdf_input"):
-                pdf_path = Path(cfg["pdf_input"])
-                if pdf_path.exists() and pdf_path.is_file():
-                    artifacts["inputs"]["pdf_input"] = pdf_path
+                pdf_input_path = Path(cfg["pdf_input"])
+                if pdf_input_path.exists() and pdf_input_path.is_file():
+                    inputs["pdf_input"] = pdf_input_path
                 else:
-                    logger.warning("Treatment report not found: %s", pdf_path)
+                    logger.warning("Treatment report not found: %s", pdf_input_path)
 
             if not dry_run:
                 scratch.mkdir(parents=True, exist_ok=True)
                 if not scratch.exists():
                     raise ValidationError(f"Scratch dir could not be created: {scratch}")
 
-        logger.info("Planned actions:")
-        for item in planned_actions:
-            logger.info(" - %s", item)
+        logger.info("Run plan ready (dry_run=%s).", dry_run)
 
         if dry_run:
             step_results["MRI"] = {"status": "SKIP", "duration_s": 0.0, "error": "dry-run"}
@@ -875,7 +937,7 @@ def main() -> int:
                     mri_artifacts = MRI_proc.run(
                         root=root,
                         case=case,
-                        input_zip=Path(cfg["mri_input"]),
+                        input_zip=inputs["mri_input"],
                         mr_dir=mr_dir,
                         scratch=scratch,
                         logger=logger,
@@ -894,7 +956,7 @@ def main() -> int:
                     tdc_artifacts = TDC_proc.run(
                         root=root,
                         case=case,
-                        input_zip=Path(cfg["tdc_input"]),
+                        input_zip=inputs["tdc_input"],
                         tdc_dir=tdc_dir,
                         misc_dir=misc_dir,
                         scratch=scratch,
@@ -919,7 +981,7 @@ def main() -> int:
         with StepTimer(
             logger=logger, step_name="Treatment report", results=step_results, status_mgr=status_mgr
         ):
-            pdf_input = Path(cfg["pdf_input"]) if cfg.get("pdf_input") else None
+            pdf_input = pdf_input_path
             target_pdf = None
             if pdf_input:
                 if legacy_filename_rules:
@@ -942,25 +1004,39 @@ def main() -> int:
         with StepTimer(
             logger=logger, step_name="structure_guard", results=step_results, status_mgr=status_mgr
         ):
+            import src.structure_guard as sg
+
+            if legacy_filename_rules:
+                pdf_expected = misc_dir / f"{case}_TreatmentReport.pdf"
+                if not pdf_expected.exists():
+                    pdf_candidates = [
+                        p for p in case_dir.rglob("*.pdf") if p != pdf_expected
+                    ]
+                    if not pdf_candidates:
+                        logger.warning(
+                            "Treatment report missing; expected %s",
+                            pdf_expected,
+                        )
+
             if dry_run:
-                logger.info("Dry-run: structure_guard would validate/fix layout.")
+                initial_errs, _, _ = sg.enforce(
+                    case_dir,
+                    case,
+                    allow_missing_pdf=True,
+                    misc_dir_name=misc_dir.name,
+                    mr_dir_name=mr_dir.name,
+                    tdc_dir_name=tdc_dir.name,
+                    legacy_names=legacy_filename_rules,
+                    dry_run=True,
+                )
+                if initial_errs:
+                    logger.info("Dry-run: structure_guard would fail with:")
+                    for e in initial_errs:
+                        logger.info(" - %s", e)
+                else:
+                    logger.info("Dry-run: structure_guard would validate/fix layout.")
             else:
-                import src.structure_guard as sg
-
-                pdf_candidates = []
-                if legacy_filename_rules:
-                    pdf_expected = misc_dir / f"{case}_TreatmentReport.pdf"
-                    if not pdf_expected.exists():
-                        pdf_candidates = [
-                            p for p in case_dir.rglob("*.pdf") if p != pdf_expected
-                        ]
-                        if not pdf_candidates:
-                            logger.warning(
-                                "Treatment report missing; expected %s",
-                                pdf_expected,
-                            )
-
-                errs = sg.verify(
+                initial_errs, final_errs, changes = sg.enforce(
                     case_dir,
                     case,
                     allow_missing_pdf=True,
@@ -969,33 +1045,15 @@ def main() -> int:
                     tdc_dir_name=tdc_dir.name,
                     legacy_names=legacy_filename_rules,
                 )
-                force_fix = bool(pdf_candidates)
-                if errs or force_fix:
+                if initial_errs:
                     logger.info("structure_guard detected layout issues.")
-                    for e in errs:
+                    for e in initial_errs:
                         logger.info(" - %s", e)
-                    changes = sg.fix(
-                        case_dir,
-                        case,
-                        misc_dir_name=misc_dir.name,
-                        mr_dir_name=mr_dir.name,
-                        tdc_dir_name=tdc_dir.name,
-                        legacy_names=legacy_filename_rules,
-                    )
-                    if changes:
-                        for c in changes:
-                            logger.info(" - %s", c)
-                    errs2 = sg.verify(
-                        case_dir,
-                        case,
-                        allow_missing_pdf=True,
-                        misc_dir_name=misc_dir.name,
-                        mr_dir_name=mr_dir.name,
-                        tdc_dir_name=tdc_dir.name,
-                        legacy_names=legacy_filename_rules,
-                    )
-                    if errs2:
-                        raise ProcessingError(f"structure_guard failed: {errs2}")
+                if changes:
+                    for c in changes:
+                        logger.info(" - %s", c)
+                if final_errs:
+                    raise ProcessingError(f"structure_guard failed: {final_errs}")
 
         with StepTimer(
             logger=logger, step_name="Finalization", results=step_results, status_mgr=status_mgr
@@ -1022,32 +1080,10 @@ def main() -> int:
         if status_mgr:
             status_mgr.__exit__(None, None, None)
 
-        manifest_payload = {
-            "run_id": run_id,
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
-            "case": case,
-            "status": status,
-            "test_mode": test_mode,
-            "hostname": socket.gethostname(),
-            "user": getpass.getuser(),
-            "platform": platform.platform(),
-            "python_version": platform.python_version(),
-            "config": {k: str(v) if isinstance(v, Path) else v for k, v in cfg.items()},
-            "steps": step_results,
-            "plan": planned_actions,
-            "inputs": {},
-            "outputs": {},
-            "versions": {},
-            "log_file": str(log_file),
-        }
-
-        manifest_payload["versions"]["rich"] = None
-        manifest_payload["versions"]["yaml"] = None
-
-        for label, path in artifacts.get("inputs", {}).items():
-            manifest_payload["inputs"][label] = file_metadata(
-                Path(path), compute_hash=hash_outputs
-            )
+        config_for_manifest = dict(cfg)
+        config_for_manifest["run"] = {"flags": run_flags}
+        backups: Dict[str, Any] = {}
+        outputs_meta: Dict[str, Any] = {}
 
         pdf_output = None
         if cfg.get("pdf_input"):
@@ -1058,41 +1094,50 @@ def main() -> int:
             )
             pdf_output = misc_dir / pdf_name
         if pdf_output and pdf_output.exists():
-            manifest_payload["outputs"]["treatment_report"] = file_metadata(
+            outputs_meta["treatment_report"] = file_metadata(
                 pdf_output, compute_hash=hash_outputs
             )
 
         if "mri" in artifacts.get("outputs", {}):
             mri_out = artifacts["outputs"]["mri"]
-            manifest_payload["outputs"]["mri_unzipped_dir"] = file_metadata(
+            outputs_meta["mri_unzipped_dir"] = file_metadata(
                 mri_out["final_dir"], compute_hash=False
             )
             if mri_out.get("backup_info"):
-                manifest_payload["inputs"]["mri_backup"] = mri_out["backup_info"]
+                backups["mri_backup"] = mri_out["backup_info"]
 
         if "tdc" in artifacts.get("outputs", {}):
             tdc_out = artifacts["outputs"]["tdc"]
-            manifest_payload["outputs"]["tdc_final_session"] = file_metadata(
+            outputs_meta["tdc_final_session"] = file_metadata(
                 tdc_out["final_session"], compute_hash=False
             )
             if tdc_out.get("backup_info"):
-                manifest_payload["inputs"]["tdc_backup"] = tdc_out["backup_info"]
+                backups["tdc_backup"] = tdc_out["backup_info"]
             if tdc_out.get("local_db"):
-                manifest_payload["outputs"]["tdc_local_db"] = file_metadata(
+                outputs_meta["tdc_local_db"] = file_metadata(
                     tdc_out["local_db"], compute_hash=hash_outputs
                 )
             if tdc_out.get("session_zips"):
-                manifest_payload["outputs"]["tdc_session_zips"] = [
+                outputs_meta["tdc_session_zips"] = [
                     file_metadata(Path(p), compute_hash=hash_outputs)
                     for p in tdc_out["session_zips"]
                 ]
 
-        manifest_payload["outputs"]["log_file"] = file_metadata(
-            log_file, compute_hash=False
+        manifest_payload = build_manifest_payload(
+            cfg_for_manifest=config_for_manifest,
+            run_id=run_id,
+            case=case,
+            status=status,
+            test_mode=test_mode,
+            log_file=log_file,
+            planned_actions=planned_actions,
+            step_results=step_results,
+            inputs=inputs,
+            backups=backups,
+            outputs_meta=outputs_meta,
+            hash_outputs=hash_outputs,
+            dry_run=dry_run,
         )
-
-        if dry_run:
-            manifest_payload["outputs"]["note"] = "dry-run: outputs not created"
 
         try:
             write_manifest(manifest_path, manifest_payload)

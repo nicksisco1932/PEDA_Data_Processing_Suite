@@ -74,6 +74,26 @@ def verify(
     if root_applog.exists():
         errs.append("Root applog/Logs should be under TDC Sessions/applog/Logs")
 
+    allowed_top = {
+        misc.name,
+        mr.name,
+        tdc.name,
+        "scratch",
+        "run_manifests",
+    }
+    extra_dirs = []
+    for p in case_root.iterdir():
+        if not p.is_dir():
+            continue
+        if p.name in allowed_top:
+            continue
+        if SESSION_DIR_RE.match(p.name):
+            continue
+        extra_dirs.append(p.name)
+    if extra_dirs:
+        extra_dirs.sort()
+        errs.append(f"Unexpected top-level dirs: {', '.join(extra_dirs)}")
+
     return errs
 
 def fix(
@@ -84,8 +104,9 @@ def fix(
     mr_dir_name: str | None = None,
     tdc_dir_name: str | None = None,
     legacy_names: bool = False,
-) -> list[str]:
+) -> tuple[list[str], list[str]]:
     changes: list[str] = []
+    errors: list[str] = []
     misc = _ensure_dir(case_root / (misc_dir_name or "Misc"))
     mr   = _ensure_dir(case_root / (mr_dir_name or "MR DICOM"))
     tdc  = _ensure_dir(case_root / (tdc_dir_name or "TDC Sessions"))
@@ -97,9 +118,12 @@ def fix(
         if p.is_dir() and SESSION_DIR_RE.match(p.name):
             dest = tdc / p.name
             if dest.resolve() != p.resolve():
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.move(str(p), str(dest))
-                changes.append(f"MOVED session dir -> {dest}")
+                if dest.exists():
+                    errors.append(f"Session dir collision at {dest}")
+                else:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(p), str(dest))
+                    changes.append(f"MOVED session dir -> {dest}")
 
     # 2) Merge root 'Logs' into TDC Sessions/applog/Logs
     root_logs = case_root / "Logs"
@@ -139,16 +163,21 @@ def fix(
 
     # 3) Normalize / relocate PDF (lenient)
     if legacy_names:
-        cand = _find_best_pdf(case_root, case_id)
-        if cand:
-            target = misc / f"{case_id}_TreatmentReport.pdf"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            if not target.exists():
+        target = misc / f"{case_id}_TreatmentReport.pdf"
+        if not target.exists():
+            pdfs = [p for p in case_root.rglob("*.pdf")]
+            if len(pdfs) == 1:
+                cand = pdfs[0]
+                target.parent.mkdir(parents=True, exist_ok=True)
                 try:
                     shutil.move(str(cand), str(target))
                     changes.append(f"MOVED PDF -> {target}")
                 except Exception:
-                    pass
+                    errors.append(f"Failed to move PDF -> {target}")
+            elif len(pdfs) > 1:
+                errors.append(
+                    f"Ambiguous PDF candidates: {', '.join(p.name for p in pdfs)}"
+                )
 
     # 4) Remove empty MR DICOM\\DICOM
     dcm = mr / "DICOM"
@@ -162,7 +191,54 @@ def fix(
             except Exception:
                 pass
 
-    return changes
+    return changes, errors
+
+def enforce(
+    case_root: Path,
+    case_id: str,
+    allow_missing_pdf: bool = False,
+    *,
+    misc_dir_name: str | None = None,
+    mr_dir_name: str | None = None,
+    tdc_dir_name: str | None = None,
+    legacy_names: bool = False,
+    dry_run: bool = False,
+) -> tuple[list[str], list[str], list[str]]:
+    initial_errs = verify(
+        case_root,
+        case_id,
+        allow_missing_pdf=allow_missing_pdf,
+        misc_dir_name=misc_dir_name,
+        mr_dir_name=mr_dir_name,
+        tdc_dir_name=tdc_dir_name,
+        legacy_names=legacy_names,
+    )
+    if not initial_errs:
+        return [], [], []
+    if dry_run:
+        return initial_errs, initial_errs, []
+
+    changes, fix_errors = fix(
+        case_root,
+        case_id,
+        misc_dir_name=misc_dir_name,
+        mr_dir_name=mr_dir_name,
+        tdc_dir_name=tdc_dir_name,
+        legacy_names=legacy_names,
+    )
+    final_errs = verify(
+        case_root,
+        case_id,
+        allow_missing_pdf=allow_missing_pdf,
+        misc_dir_name=misc_dir_name,
+        mr_dir_name=mr_dir_name,
+        tdc_dir_name=tdc_dir_name,
+        legacy_names=legacy_names,
+    )
+    for err in fix_errors:
+        if err not in final_errs:
+            final_errs.append(err)
+    return initial_errs, final_errs, changes
 
 def main():
     ap = argparse.ArgumentParser()
@@ -175,45 +251,30 @@ def main():
     ap.add_argument("--legacy-names", action="store_true")
     args = ap.parse_args()
 
-    errs = verify(
+    initial_errs, final_errs, changes = enforce(
         args.case_root,
         args.id,
         misc_dir_name=args.misc_dir_name,
         mr_dir_name=args.mr_dir_name,
         tdc_dir_name=args.tdc_dir_name,
         legacy_names=args.legacy_names,
+        dry_run=not args.fix,
     )
-    if errs:
+    if initial_errs:
         print("FAIL: Layout issues detected:")
-        for e in errs:
+        for e in initial_errs:
             print(" -", e)
         if args.fix:
             print("\nAttempting to fix...")
-            changes = fix(
-                args.case_root,
-                args.id,
-                misc_dir_name=args.misc_dir_name,
-                mr_dir_name=args.mr_dir_name,
-                tdc_dir_name=args.tdc_dir_name,
-                legacy_names=args.legacy_names,
-            )
             if changes:
                 print("Applied changes:")
                 for c in changes:
                     print(" -", c)
             else:
                 print("No changes applied.")
-            errs2 = verify(
-                args.case_root,
-                args.id,
-                misc_dir_name=args.misc_dir_name,
-                mr_dir_name=args.mr_dir_name,
-                tdc_dir_name=args.tdc_dir_name,
-                legacy_names=args.legacy_names,
-            )
-            if errs2:
+            if final_errs:
                 print("\nRemaining issues:")
-                for e in errs2:
+                for e in final_errs:
                     print(" -", e)
                 sys.exit(1)
             else:
