@@ -53,9 +53,9 @@ DEFAULTS: Dict[str, Any] = {
 }
 
 CANONICAL_LAYOUT = {
-    "mr_dir_name": "{case_id} MR DICOM",
-    "tdc_dir_name": "{case_id} TDC Sessions",
-    "misc_dir_name": "{case_id} Misc",
+    "mr_dir_name": "MR DICOM",
+    "tdc_dir_name": "TDC Sessions",
+    "misc_dir_name": "Misc",
 }
 
 CASE_ID_RE = re.compile(r"(\d{3})[-_](\d{2})[-_](\d{3,})", re.IGNORECASE)

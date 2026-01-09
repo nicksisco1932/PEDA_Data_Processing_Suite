@@ -45,12 +45,14 @@ def test_test_mode_produces_schema(tmp_path: Path) -> None:
     assert proc.returncode == 0, f"controller failed:\n{proc.stdout}\n{proc.stderr}"
 
     case_dir = tmp_path / case_id
-    misc_dir = case_dir / f"{case_id} Misc"
-    mr_dir = case_dir / f"{case_id} MR DICOM"
-    tdc_dir = case_dir / f"{case_id} TDC Sessions"
+    misc_dir = case_dir / "Misc"
+    mr_dir = case_dir / "MR DICOM"
+    tdc_dir = case_dir / "TDC Sessions"
     assert misc_dir.is_dir()
     assert mr_dir.is_dir()
     assert tdc_dir.is_dir()
+
+    assert list(mr_dir.rglob("*.zip")) == []
 
     workspaces = [p for p in tdc_dir.iterdir() if p.is_dir() and p.name.startswith("_")]
     assert len(workspaces) == 1
@@ -61,7 +63,7 @@ def test_test_mode_produces_schema(tmp_path: Path) -> None:
     assert list(workspace.rglob("*.zip")) == []
 
 
-def test_no_unprefixed_dirs_created(tmp_path: Path) -> None:
+def test_no_prefixed_dirs_created(tmp_path: Path) -> None:
     _ensure_fixtures()
     case_id = "TEST_CASE"
     proc = _run_controller(
@@ -80,6 +82,6 @@ def test_no_unprefixed_dirs_created(tmp_path: Path) -> None:
     assert proc.returncode == 0, f"controller failed:\n{proc.stdout}\n{proc.stderr}"
 
     case_dir = tmp_path / case_id
-    assert not (case_dir / "Misc").exists()
-    assert not (case_dir / "MR DICOM").exists()
-    assert not (case_dir / "TDC Sessions").exists()
+    assert not (case_dir / f"{case_id} Misc").exists()
+    assert not (case_dir / f"{case_id} MR DICOM").exists()
+    assert not (case_dir / f"{case_id} TDC Sessions").exists()

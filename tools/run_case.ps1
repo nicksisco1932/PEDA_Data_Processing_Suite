@@ -247,7 +247,12 @@ if (-not $parseOk) {
     }
 }
 
-$runId = (Read-Host "run_id (optional; leave blank for auto)").Trim()
+$runIdInput = Read-Host "run_id (optional; leave blank for auto)"
+if ($null -eq $runIdInput) {
+    $runId = ""
+} else {
+    $runId = $runIdInput.Trim()
+}
 
 if ([string]::IsNullOrWhiteSpace($caseNum)) {
     Write-Error "case_num is required."

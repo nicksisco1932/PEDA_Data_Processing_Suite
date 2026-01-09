@@ -83,10 +83,8 @@ def _build_plan(
         plan.append(
             f"Copy MRI zip to scratch backup: {mri_input} -> {scratch / (mri_input.name + '.bak')}"
         )
-        plan.append(f"Extract MRI zip into temp under: {scratch}")
-        plan.append(f"Create MRI anonymized zip in scratch: {scratch / 'MRI_anonymized.zip'}")
-        mri_name = f"{case}_MRI.zip" if legacy_names else mri_input.name
-        plan.append(f"Copy MRI final zip to: {mr_dir / mri_name}")
+        final_dir = mr_dir / f"{mri_input.stem} (UNZIPPED)"
+        plan.append(f"Extract MRI zip into final dir: {final_dir}")
     if not skip_tdc and tdc_input:
         plan.append(
             f"Copy TDC zip to scratch backup: {tdc_input} -> {scratch / (tdc_input.name + '.bak')}"
@@ -106,9 +104,7 @@ def _build_plan(
         plan.append(f"Copy staged TDC session to: {tdc_dir / '<session_name>'}")
     if pdf_input:
         pdf_name = f"{case}_TreatmentReport.pdf" if legacy_names else pdf_input.name
-        plan.append(
-            f"Copy treatment report to: {misc_dir / pdf_name}"
-        )
+        plan.append(f"Copy treatment report to: {misc_dir / pdf_name}")
     plan.append(f"Write log file to: {log_dir / (case + '__' + run_id + '.log')}")
     plan.append(f"Write manifest to: {manifest_path}")
     if clean_scratch:
@@ -245,9 +241,9 @@ def _run_self_test() -> int:
                 f"  id: \"{case_num}\"\n"
                 f"  root: '{out_root}'\n"
                 "  layout:\n"
-                "    mr_dir_name: \"{case_id} MR DICOM\"\n"
-                "    tdc_dir_name: \"{case_id} TDC Sessions\"\n"
-                "    misc_dir_name: \"{case_id} Misc\"\n"
+                "    mr_dir_name: \"MR DICOM\"\n"
+                "    tdc_dir_name: \"TDC Sessions\"\n"
+                "    misc_dir_name: \"Misc\"\n"
                 "inputs:\n"
                 "  mode: \"explicit\"\n"
                 "  explicit:\n"
@@ -298,9 +294,9 @@ def _run_self_test() -> int:
             },
             "output_dirs": {
                 "case_dir": str(out_root / case_num),
-                "mr_dir": str(out_root / case_num / f"{case_num} MR DICOM"),
-                "tdc_dir": str(out_root / case_num / f"{case_num} TDC Sessions"),
-                "misc_dir": str(out_root / case_num / f"{case_num} Misc"),
+                "mr_dir": str(out_root / case_num / "MR DICOM"),
+                "tdc_dir": str(out_root / case_num / "TDC Sessions"),
+                "misc_dir": str(out_root / case_num / "Misc"),
             },
             "invocation": {"method": perm["method"], "args": args},
             "return_code": proc.returncode,
@@ -313,11 +309,7 @@ def _run_self_test() -> int:
             continue
 
         case_dir = out_root / case_num
-        expected_dirs = {
-            f"{case_num} MR DICOM",
-            f"{case_num} TDC Sessions",
-            f"{case_num} Misc",
-        }
+        expected_dirs = {"MR DICOM", "TDC Sessions", "Misc"}
         if not case_dir.exists():
             failures.append(f"perm_{idx:02d}: missing case_dir {case_dir}")
             perm_result["status"] = "FAIL"
@@ -471,9 +463,9 @@ def main() -> int:
     root: Path = cfg["root"]
     case: str = cfg["case"]
     case_dir = cfg.get("case_dir") or (root / case)
-    mr_dir = cfg.get("mr_dir") or (case_dir / f"{case} MR DICOM")
-    tdc_dir = cfg.get("tdc_dir") or (case_dir / f"{case} TDC Sessions")
-    misc_dir = cfg.get("misc_dir") or (case_dir / f"{case} Misc")
+    mr_dir = cfg.get("mr_dir") or (case_dir / "MR DICOM")
+    tdc_dir = cfg.get("tdc_dir") or (case_dir / "TDC Sessions")
+    misc_dir = cfg.get("misc_dir") or (case_dir / "Misc")
     scratch: Path = cfg["scratch"] or (case_dir / "scratch")
     if cfg.get("log_dir"):
         log_dir = cfg["log_dir"]
@@ -568,24 +560,24 @@ def main() -> int:
             logger=logger, step_name="Controller validations", results=step_results, status_mgr=status_mgr
         ):
             expected_case_name = case
-            expected_mr_name = f"{case} MR DICOM"
-            expected_tdc_name = f"{case} TDC Sessions"
-            expected_misc_name = f"{case} Misc"
+            expected_mr_name = "MR DICOM"
+            expected_tdc_name = "TDC Sessions"
+            expected_misc_name = "Misc"
 
-            legacy_misc = case_dir / "Misc"
-            legacy_mr = case_dir / "MR DICOM"
-            legacy_tdc = case_dir / "TDC Sessions"
+            legacy_misc = case_dir / f"{case} Misc"
+            legacy_mr = case_dir / f"{case} MR DICOM"
+            legacy_tdc = case_dir / f"{case} TDC Sessions"
             legacy_dirs = [legacy_misc, legacy_mr, legacy_tdc]
             legacy_present = [p for p in legacy_dirs if p.exists()]
             if legacy_present:
                 if all(p.exists() for p in (misc_dir, mr_dir, tdc_dir)):
                     logger.warning(
-                        "Legacy unprefixed folders exist; using case-prefixed schema. legacy=%s",
+                        "Legacy case-prefixed folders exist; using unprefixed schema. legacy=%s",
                         [str(p) for p in legacy_present],
                     )
                 else:
                     logger.warning(
-                        "Legacy unprefixed folders exist; creating case-prefixed folders at %s, %s, %s",
+                        "Legacy case-prefixed folders exist; creating unprefixed folders at %s, %s, %s",
                         misc_dir,
                         mr_dir,
                         tdc_dir,
@@ -662,7 +654,7 @@ def main() -> int:
                         legacy_names=legacy_filename_rules,
                     )
                     artifacts["outputs"]["mri"] = mri_artifacts
-                    _assert_exists(mri_artifacts["final_zip"], "MRI final zip")
+                    _assert_exists(mri_artifacts["final_dir"], "MRI final dir")
             else:
                 step_results["MRI"] = {"status": "SKIP", "duration_s": 0.0, "error": "skip_mri"}
 
@@ -853,8 +845,8 @@ def main() -> int:
 
         if "mri" in artifacts.get("outputs", {}):
             mri_out = artifacts["outputs"]["mri"]
-            manifest_payload["outputs"]["mri_final_zip"] = file_metadata(
-                mri_out["final_zip"], compute_hash=hash_outputs
+            manifest_payload["outputs"]["mri_unzipped_dir"] = file_metadata(
+                mri_out["final_dir"], compute_hash=False
             )
             if mri_out.get("backup_info"):
                 manifest_payload["inputs"]["mri_backup"] = mri_out["backup_info"]
@@ -902,8 +894,8 @@ def main() -> int:
         logger.info("Artifacts:")
         if not skip_mri:
             logger.info(
-                " - MRI final zip: %s",
-                artifacts.get("outputs", {}).get("mri", {}).get("final_zip", "n/a"),
+                " - MRI final dir: %s",
+                artifacts.get("outputs", {}).get("mri", {}).get("final_dir", "n/a"),
             )
         if not skip_tdc:
             logger.info(

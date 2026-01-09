@@ -106,8 +106,8 @@ def run(
 ) -> dict:
     log = logger or logging.getLogger(__name__)
     case_dir = root / case
-    tdc_dir = tdc_dir or (case_dir / f"{case} TDC Sessions")
-    misc_dir = misc_dir or (case_dir / f"{case} Misc")
+    tdc_dir = tdc_dir or (case_dir / "TDC Sessions")
+    misc_dir = misc_dir or (case_dir / "Misc")
 
     if not input_zip.exists() or not input_zip.is_file() or input_zip.suffix.lower() != ".zip":
         raise ValidationError(f"TDC input not found or not .zip: {input_zip}")

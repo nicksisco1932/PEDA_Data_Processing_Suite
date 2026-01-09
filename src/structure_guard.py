@@ -45,9 +45,9 @@ def verify(
     legacy_names: bool = False,
 ) -> list[str]:
     errs: list[str] = []
-    misc = case_root / (misc_dir_name or f"{case_id} Misc")
-    mr   = case_root / (mr_dir_name or f"{case_id} MR DICOM")
-    tdc  = case_root / (tdc_dir_name or f"{case_id} TDC Sessions")
+    misc = case_root / (misc_dir_name or "Misc")
+    mr   = case_root / (mr_dir_name or "MR DICOM")
+    tdc  = case_root / (tdc_dir_name or "TDC Sessions")
     applog = tdc / "applog"
     logs = applog / "Logs"
 
@@ -61,9 +61,6 @@ def verify(
             found = list(misc.glob(f"{case_id}_TreatmentReport.pdf*"))
             if not found and not allow_missing_pdf:
                 errs.append(f"PDF not normalized: expected {pdf.name} in {misc}")
-
-        if not (mr / f"{case_id}_MRI.zip").exists():
-            errs.append(f"MRI zip missing: {mr / (case_id + '_MRI.zip')}")
 
     stray_sessions = [p for p in case_root.iterdir() if p.is_dir() and SESSION_DIR_RE.match(p.name)]
     if stray_sessions:
@@ -89,9 +86,9 @@ def fix(
     legacy_names: bool = False,
 ) -> list[str]:
     changes: list[str] = []
-    misc = _ensure_dir(case_root / (misc_dir_name or f"{case_id} Misc"))
-    mr   = _ensure_dir(case_root / (mr_dir_name or f"{case_id} MR DICOM"))
-    tdc  = _ensure_dir(case_root / (tdc_dir_name or f"{case_id} TDC Sessions"))
+    misc = _ensure_dir(case_root / (misc_dir_name or "Misc"))
+    mr   = _ensure_dir(case_root / (mr_dir_name or "MR DICOM"))
+    tdc  = _ensure_dir(case_root / (tdc_dir_name or "TDC Sessions"))
     applog = _ensure_dir(tdc / "applog")
     logs = _ensure_dir(applog / "Logs")
 
@@ -153,18 +150,7 @@ def fix(
                 except Exception:
                     pass
 
-        # 4) Ensure MRI zip lives under MR DICOM
-        for p in case_root.rglob(f"{case_id}_MRI.zip"):
-            if p.parent.resolve() != mr.resolve():
-                dst = mr / p.name
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    shutil.move(str(p), str(dst))
-                    changes.append(f"MOVED MRI zip -> {dst}")
-                except Exception:
-                    pass
-
-    # 5) Remove empty MR DICOM\\DICOM
+    # 4) Remove empty MR DICOM\\DICOM
     dcm = mr / "DICOM"
     if dcm.exists():
         try:

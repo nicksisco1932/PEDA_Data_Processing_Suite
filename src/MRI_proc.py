@@ -1,13 +1,12 @@
-# PURPOSE: Process MRI zip input and produce the canonical MR DICOM zip output.
+# PURPOSE: Process MRI zip input and produce the canonical MR DICOM unzipped output.
 # INPUTS: MRI zip path, scratch/output dirs, and run flags.
-# OUTPUTS: <case_dir>/<case_id> MR DICOM/<input_zip.name> and staging artifacts.
+# OUTPUTS: <case_dir>/MR DICOM/<input_zip.stem> (UNZIPPED) directory.
 # NOTES: Uses archive_utils with optional 7-Zip preference.
 from __future__ import annotations
 
 from pathlib import Path
 import logging
 import shutil
-import tempfile
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.logutil import ValidationError, ProcessingError, copy_with_integrity
-from src.archive_utils import create_zip_from_dir, extract_archive
+from src.archive_utils import extract_archive
 
 
 def run(
@@ -31,18 +30,17 @@ def run(
 ) -> dict:
     log = logger or logging.getLogger(__name__)
     case_dir = root / case
-    mr_dir = mr_dir or (case_dir / f"{case} MR DICOM")
+    mr_dir = mr_dir or (case_dir / "MR DICOM")
 
     if not input_zip.exists() or not input_zip.is_file() or input_zip.suffix.lower() != ".zip":
         raise ValidationError(f"MRI input not found or not .zip: {input_zip}")
 
     bak = scratch / (input_zip.name + ".bak")
-    out_zip = scratch / "MRI_anonymized.zip"
-    final_zip = mr_dir / (f"{case}_MRI.zip" if legacy_names else input_zip.name)
+    final_dir = mr_dir / f"{input_zip.stem} (UNZIPPED)"
 
     if dry_run:
-        log.info("MRI dry-run: would copy, extract, and re-zip %s", input_zip)
-        return {"backup": bak, "scratch_zip": out_zip, "final_zip": final_zip}
+        log.info("MRI dry-run: would copy and extract %s", input_zip)
+        return {"backup": bak, "final_dir": final_dir}
 
     try:
         log.info("MRI input: %s", input_zip)
@@ -56,24 +54,16 @@ def run(
             backup_info.get("dst_sha256"),
         )
 
-        # 2) unzip -> (future anonymize) -> rezip into scratch/MRI_anonymized.zip
-        with tempfile.TemporaryDirectory(dir=scratch, prefix="mri_unzipped_") as tmpdir:
-            tmp = Path(tmpdir)
-            try:
-                extract_archive(bak, tmp, prefer_7z=True)
-            except Exception as exc:
-                raise ProcessingError(f"MRI extraction failed: {exc}") from exc
-            log.info("MRI extracted: %s", tmp)
-
-            # (anonymization would happen here later, operating on files under `tmp`)
-
-            create_zip_from_dir(tmp, out_zip, prefer_7z=True)
-            log.info("MRI repacked: %s", out_zip)
-
-        # 3) copy final to case MR folder as <case>_MRI.zip
-        final_zip.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(out_zip, final_zip)
-        log.info("MRI final: %s", final_zip)
+        # 2) unzip -> final MR DICOM directory
+        final_dir.parent.mkdir(parents=True, exist_ok=True)
+        if final_dir.exists():
+            shutil.rmtree(final_dir, ignore_errors=True)
+        final_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            extract_archive(bak, final_dir, prefer_7z=True)
+        except Exception as exc:
+            raise ProcessingError(f"MRI extraction failed: {exc}") from exc
+        log.info("MRI extracted to final dir: %s", final_dir)
     except ValidationError:
         raise
     except Exception as exc:
@@ -82,6 +72,5 @@ def run(
     return {
         "backup": bak,
         "backup_info": backup_info if not dry_run else None,
-        "scratch_zip": out_zip,
-        "final_zip": final_zip,
+        "final_dir": final_dir,
     }
