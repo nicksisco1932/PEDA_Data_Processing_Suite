@@ -17,6 +17,18 @@ python tools/generate_fixtures.py
 pytest -q
 ```
 
+Run the built-in self-test (no pytest required):
+```
+python src/controller.py --self-test
+```
+
+Self-test notes:
+- Uses deterministic input name permutations under `tests/_tmp/TEST_MODE/perm_XX/`.
+- Runs half permutations via CLI args and half via a temp YAML config.
+- Includes quoted Windows "Copy as path" strings.
+- Asserts outputs land only in `<case_num> MR DICOM`, `<case_num> TDC Sessions`, `<case_num> Misc`.
+- Writes artifacts to `logs/` (including `TEST_CASE__TEST_MODE.log`, `RUN_TEST_MODE.log`, `RUN_TEST_MODE_manifest.json`).
+
 Notes:
 - Quoted Windows paths (Copy as path) are accepted in YAML and CLI.
 - 7-Zip is optional but preferred; set `SEVEN_ZIP` or install to `C:\Program Files\7-Zip\7z.exe`.

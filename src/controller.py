@@ -8,6 +8,7 @@ import argparse
 import getpass
 import platform
 import socket
+import subprocess
 import sys
 import shutil
 from datetime import datetime
@@ -30,6 +31,7 @@ from src.logutil import (
 )
 from src.manifest import file_metadata, write_manifest
 from src.pipeline_config import add_bool_arg, resolve_config
+from src.path_utils import sanitize_path_str
 
 
 def _validate_zip(path: Path, label: str, raw_value: Optional[str] = None) -> None:
@@ -114,6 +116,285 @@ def _build_plan(
     return plan
 
 
+def _run_self_test() -> int:
+    repo_root = ROOT
+    logs_dir = repo_root / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+
+    run_id = "TEST_MODE"
+    case_num = "TEST_CASE"
+    tmp_root = repo_root / "tests" / "_tmp" / run_id
+    tmp_root.mkdir(parents=True, exist_ok=True)
+
+    fixture_script = repo_root / "tools" / "generate_fixtures.py"
+    proc = subprocess.run(
+        [sys.executable, str(fixture_script)],
+        capture_output=True,
+        text=True,
+        cwd=str(repo_root),
+    )
+    if proc.returncode != 0:
+        sys.stderr.write(
+            f"[SELF-TEST] Fixture generation failed:\n{proc.stdout}\n{proc.stderr}\n"
+        )
+        return 1
+
+    mri_fixture = repo_root / "tests" / "fixtures" / "mri_dummy.zip"
+    tdc_fixture = repo_root / "tests" / "fixtures" / "tdc_dummy.zip"
+    if not mri_fixture.exists() or not tdc_fixture.exists():
+        sys.stderr.write("[SELF-TEST] Missing fixture zips.\n")
+        return 1
+
+    permutations = [
+        {"mri": "alpha.zip", "tdc": "bravo.zip", "pdf": "charlie.pdf", "method": "cli", "quote": False},
+        {"mri": "foo bar.zip", "tdc": "echo.zip", "pdf": "delta file.pdf", "method": "cli", "quote": True},
+        {"mri": "golf.zip", "tdc": "hotel.zip", "pdf": "india.pdf", "method": "cli", "quote": False},
+        {"mri": "juliet.zip", "tdc": "kilo.zip", "pdf": "lima.pdf", "method": "yaml", "quote": False},
+        {"mri": "november.zip", "tdc": "oscar.zip", "pdf": "papa file.pdf", "method": "yaml", "quote": True},
+        {"mri": "sierra.zip", "tdc": "tango.zip", "pdf": "uniform.pdf", "method": "yaml", "quote": False},
+    ]
+
+    def validate_basename(name: str) -> None:
+        lowered = name.lower()
+        if "mr" in lowered or "tdc" in lowered or case_num.lower() in lowered:
+            raise ValueError(f"Invalid basename (contains forbidden tokens): {name}")
+
+    def yaml_path_value(path: Path, wrap_quotes: bool) -> str:
+        raw = str(path)
+        if wrap_quotes:
+            return f'"{raw}"'
+        return raw
+
+    results: List[Dict[str, Any]] = []
+    failures: List[str] = []
+
+    for idx, perm in enumerate(permutations, start=1):
+        try:
+            validate_basename(perm["mri"])
+            validate_basename(perm["tdc"])
+            validate_basename(perm["pdf"])
+        except ValueError as exc:
+            failures.append(f"perm_{idx:02d}: {exc}")
+            results.append(
+                {
+                    "index": idx,
+                    "status": "FAIL",
+                    "error": str(exc),
+                    "permuted_basenames": perm,
+                    "backup_paths": {"mri": None, "tdc": None, "pdf": None},
+                }
+            )
+            continue
+
+        perm_dir = tmp_root / f"perm_{idx:02d}"
+        if perm_dir.exists():
+            shutil.rmtree(perm_dir, ignore_errors=True)
+        perm_dir.mkdir(parents=True, exist_ok=True)
+
+        inputs_dir = perm_dir / "inputs"
+        inputs_dir.mkdir(parents=True, exist_ok=True)
+
+        mri_path = inputs_dir / perm["mri"]
+        tdc_path = inputs_dir / perm["tdc"]
+        pdf_path = inputs_dir / perm["pdf"]
+        shutil.copy2(mri_fixture, mri_path)
+        shutil.copy2(tdc_fixture, tdc_path)
+        pdf_path.write_bytes(b"%PDF-1.4\n%EOF\n")
+
+        mri_bak = Path(str(mri_path) + ".bak")
+        tdc_bak = Path(str(tdc_path) + ".bak")
+        pdf_bak = Path(str(pdf_path) + ".bak")
+        shutil.copy2(mri_path, mri_bak)
+        shutil.copy2(tdc_path, tdc_bak)
+        shutil.copy2(pdf_path, pdf_bak)
+
+        out_root = perm_dir / "out"
+        out_root.mkdir(parents=True, exist_ok=True)
+
+        if perm["method"] == "cli":
+            raw_mri = f'"{mri_path}"' if perm["quote"] else str(mri_path)
+            raw_tdc = f'"{tdc_path}"' if perm["quote"] else str(tdc_path)
+            raw_pdf = f'"{pdf_path}"' if perm["quote"] else str(pdf_path)
+            args = [
+                sys.executable,
+                str(repo_root / "src" / "controller.py"),
+                "--root",
+                str(out_root),
+                "--case",
+                case_num,
+                "--mri-input",
+                raw_mri,
+                "--tdc-input",
+                raw_tdc,
+                "--pdf-input",
+                raw_pdf,
+                "--test-mode",
+                "--run-id",
+                run_id,
+                "--log-dir",
+                str(logs_dir),
+            ]
+        else:
+            yaml_path = perm_dir / "config.yaml"
+            yaml_mri = yaml_path_value(mri_path, perm["quote"])
+            yaml_tdc = yaml_path_value(tdc_path, perm["quote"])
+            yaml_pdf = yaml_path_value(pdf_path, perm["quote"])
+            yaml_text = (
+                "version: 1\n"
+                "case:\n"
+                f"  id: \"{case_num}\"\n"
+                f"  root: '{out_root}'\n"
+                "  layout:\n"
+                "    mr_dir_name: \"{case_id} MR DICOM\"\n"
+                "    tdc_dir_name: \"{case_id} TDC Sessions\"\n"
+                "    misc_dir_name: \"{case_id} Misc\"\n"
+                "inputs:\n"
+                "  mode: \"explicit\"\n"
+                "  explicit:\n"
+                f"    mri_zip: '{yaml_mri}'\n"
+                f"    tdc_zip: '{yaml_tdc}'\n"
+                f"    pdf_input: '{yaml_pdf}'\n"
+                "run:\n"
+                "  flags:\n"
+                "    test_mode: true\n"
+                "    allow_workspace_zips: false\n"
+                "    legacy_filename_rules: false\n"
+                "logging:\n"
+                f"  dir: '{logs_dir}'\n"
+                f"  manifest_dir: '{logs_dir}'\n"
+                "metadata:\n"
+                f"  run_id: \"{run_id}\"\n"
+            )
+            yaml_path.write_text(yaml_text, encoding="utf-8")
+            raw_mri = yaml_mri
+            raw_tdc = yaml_tdc
+            raw_pdf = yaml_pdf
+            args = [
+                sys.executable,
+                str(repo_root / "src" / "controller.py"),
+                "--config",
+                str(yaml_path),
+            ]
+
+        proc = subprocess.run(args, capture_output=True, text=True, cwd=str(repo_root))
+        perm_result: Dict[str, Any] = {
+            "index": idx,
+            "status": "PASS" if proc.returncode == 0 else "FAIL",
+            "permuted_basenames": {
+                "mri": perm["mri"],
+                "tdc": perm["tdc"],
+                "pdf": perm["pdf"],
+            },
+            "backup_paths": {
+                "mri": str(mri_bak),
+                "tdc": str(tdc_bak),
+                "pdf": str(pdf_bak),
+            },
+            "raw_inputs": {"mri": raw_mri, "tdc": raw_tdc, "pdf": raw_pdf},
+            "sanitized_inputs": {
+                "mri": sanitize_path_str(raw_mri),
+                "tdc": sanitize_path_str(raw_tdc),
+                "pdf": sanitize_path_str(raw_pdf),
+            },
+            "output_dirs": {
+                "case_dir": str(out_root / case_num),
+                "mr_dir": str(out_root / case_num / f"{case_num} MR DICOM"),
+                "tdc_dir": str(out_root / case_num / f"{case_num} TDC Sessions"),
+                "misc_dir": str(out_root / case_num / f"{case_num} Misc"),
+            },
+            "invocation": {"method": perm["method"], "args": args},
+            "return_code": proc.returncode,
+        }
+
+        if proc.returncode != 0:
+            perm_result["error"] = f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
+            failures.append(f"perm_{idx:02d}: nonzero exit {proc.returncode}")
+            results.append(perm_result)
+            continue
+
+        case_dir = out_root / case_num
+        expected_dirs = {
+            f"{case_num} MR DICOM",
+            f"{case_num} TDC Sessions",
+            f"{case_num} Misc",
+        }
+        if not case_dir.exists():
+            failures.append(f"perm_{idx:02d}: missing case_dir {case_dir}")
+            perm_result["status"] = "FAIL"
+            perm_result["error"] = f"Missing case_dir {case_dir}"
+        else:
+            children = list(case_dir.iterdir())
+            child_dirs = {p.name for p in children if p.is_dir()}
+            child_files = [p.name for p in children if p.is_file()]
+            if child_files:
+                failures.append(f"perm_{idx:02d}: unexpected files {child_files}")
+                perm_result["status"] = "FAIL"
+                perm_result["error"] = f"Unexpected files at case root: {child_files}"
+            elif child_dirs != expected_dirs:
+                failures.append(
+                    f"perm_{idx:02d}: case root dirs mismatch {child_dirs}"
+                )
+                perm_result["status"] = "FAIL"
+                perm_result["error"] = (
+                    f"Expected dirs {sorted(expected_dirs)}, got {sorted(child_dirs)}"
+                )
+
+        results.append(perm_result)
+
+    run_log = logs_dir / f"RUN_{run_id}.log"
+    run_manifest = logs_dir / f"RUN_{run_id}_manifest.json"
+    case_log = logs_dir / f"{case_num}__{run_id}.log"
+    summary = {
+        "self_test": True,
+        "run_id": run_id,
+        "case_num": case_num,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "permutations": results,
+        "artifacts": {
+            "case_log": str(case_log),
+            "run_log": str(run_log),
+            "run_manifest": str(run_manifest),
+        },
+    }
+    try:
+        write_manifest(run_manifest, summary)
+    except Exception as exc:
+        failures.append(f"failed to write self-test manifest: {exc}")
+
+    try:
+        with run_log.open("a", encoding="utf-8") as fh:
+            fh.write("SELF-TEST permutations:\n")
+            for perm_result in results:
+                backups = perm_result.get("backup_paths") or {}
+                fh.write(
+                    f" - perm_{perm_result.get('index'):02d} {perm_result.get('status')} "
+                    f"mri={perm_result.get('permuted_basenames', {}).get('mri')} "
+                    f"tdc={perm_result.get('permuted_basenames', {}).get('tdc')} "
+                    f"pdf={perm_result.get('permuted_basenames', {}).get('pdf')} "
+                    f"mri_bak={backups.get('mri')} "
+                    f"tdc_bak={backups.get('tdc')} "
+                    f"pdf_bak={backups.get('pdf')}\n"
+                )
+    except Exception as exc:
+        failures.append(f"failed to append self-test log: {exc}")
+
+    if not case_log.exists():
+        failures.append(f"missing log: {case_log}")
+    if not run_log.exists():
+        failures.append(f"missing log: {run_log}")
+    if not run_manifest.exists():
+        failures.append(f"missing manifest: {run_manifest}")
+
+    if failures:
+        sys.stderr.write("[SELF-TEST] FAIL\n")
+        for f in failures:
+            sys.stderr.write(f" - {f}\n")
+        return 1
+
+    sys.stdout.write("[SELF-TEST] PASS\n")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="PEDA mini-pipeline controller")
     parser.add_argument("--config", help="Path to YAML/JSON config file")
@@ -136,6 +417,7 @@ def main() -> int:
     parser.add_argument("--log-level", help="Log level (INFO, DEBUG, etc.)")
     parser.add_argument("--run-id", help="Optional run identifier")
     parser.add_argument("--date-shift-days", type=int, help="TDC date shift (anonymization)")
+    parser.add_argument("--self-test", action="store_true", help="Run built-in self-test and exit")
     add_bool_arg(parser, "clean_scratch", "Delete scratch after success")
     add_bool_arg(parser, "skip_mri", "Skip MRI step")
     add_bool_arg(parser, "skip_tdc", "Skip TDC step")
@@ -151,6 +433,9 @@ def main() -> int:
         "Enable legacy filename-based auto discovery and output naming",
     )
     args = parser.parse_args()
+
+    if args.self_test:
+        return _run_self_test()
 
     cli_overrides = {
         "root": args.root,

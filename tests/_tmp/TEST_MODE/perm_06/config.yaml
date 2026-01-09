@@ -1,0 +1,24 @@
+version: 1
+case:
+  id: "TEST_CASE"
+  root: 'C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\_tmp\TEST_MODE\perm_06\out'
+  layout:
+    mr_dir_name: "{case_id} MR DICOM"
+    tdc_dir_name: "{case_id} TDC Sessions"
+    misc_dir_name: "{case_id} Misc"
+inputs:
+  mode: "explicit"
+  explicit:
+    mri_zip: 'C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\_tmp\TEST_MODE\perm_06\inputs\sierra.zip'
+    tdc_zip: 'C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\_tmp\TEST_MODE\perm_06\inputs\tango.zip'
+    pdf_input: 'C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\_tmp\TEST_MODE\perm_06\inputs\uniform.pdf'
+run:
+  flags:
+    test_mode: true
+    allow_workspace_zips: false
+    legacy_filename_rules: false
+logging:
+  dir: 'C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs'
+  manifest_dir: 'C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs'
+metadata:
+  run_id: "TEST_MODE"
