@@ -9,9 +9,9 @@ case:
   root: "B:\\temp_work_delete\\scratch"          # Root containing case folders
   dir: null                       # Optional explicit override (must match canonical layout)
   layout:
-    mr_dir_name: "MR DICOM"    # Canonical (do not change)
-    tdc_dir_name: "TDC Sessions"  # Canonical (do not change)
-    misc_dir_name: "Misc"      # Canonical (do not change)
+    mr_dir_name: "{case_id} MR DICOM"    # Canonical (do not change)
+    tdc_dir_name: "{case_id} TDC Sessions"  # Canonical (do not change)
+    misc_dir_name: "{case_id} Misc"      # Canonical (do not change)
 
 inputs:
   mode: "explicit"                # "auto" | "explicit"
@@ -60,7 +60,7 @@ logging:
   level_console: "INFO"           # Console verbosity
   level_file: "DEBUG"             # File verbosity (captured in rotating log)
   file_name: "{case_id}__{run_id}.log"
-  manifest_dir: "{case_dir}\\run_manifests"
+  manifest_dir: "{case_dir}\\{case_id} Misc\\Logs"
   manifest_name: "{case_id}__{run_id}__manifest.json"
 
 metadata:

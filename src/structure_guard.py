@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-# structure_guard.py  (v0.3)
-# - ASCII-only console output
-# - If no "treatment/report/summary" PDF is found, fall back to any single *.pdf (newest) and normalize.
+# PURPOSE: Validate and optionally repair the canonical case directory layout.
+# INPUTS: Case root path, case ID, and validation flags.
+# OUTPUTS: List of validation errors or applied changes.
+# NOTES: Keeps output ASCII-only; normalizes PDF name and log placement.
 
 from __future__ import annotations
 import argparse, re, shutil, sys
@@ -33,11 +34,20 @@ def _find_best_pdf(case_root: Path, case_id: str) -> Path | None:
         return scored[0][2]
     return None
 
-def verify(case_root: Path, case_id: str, allow_missing_pdf: bool = False) -> list[str]:
+def verify(
+    case_root: Path,
+    case_id: str,
+    allow_missing_pdf: bool = False,
+    *,
+    misc_dir_name: str | None = None,
+    mr_dir_name: str | None = None,
+    tdc_dir_name: str | None = None,
+    legacy_names: bool = False,
+) -> list[str]:
     errs: list[str] = []
-    misc = case_root / "Misc"
-    mr   = case_root / "MR DICOM"
-    tdc  = case_root / "TDC Sessions"
+    misc = case_root / (misc_dir_name or f"{case_id} Misc")
+    mr   = case_root / (mr_dir_name or f"{case_id} MR DICOM")
+    tdc  = case_root / (tdc_dir_name or f"{case_id} TDC Sessions")
     applog = tdc / "applog"
     logs = applog / "Logs"
 
@@ -45,14 +55,15 @@ def verify(case_root: Path, case_id: str, allow_missing_pdf: bool = False) -> li
         if not d.exists():
             errs.append(f"MISSING: {d}")
 
-    pdf = misc / f"{case_id}_TreatmentReport.pdf"
-    if not pdf.exists():
-        found = list(misc.glob(f"{case_id}_TreatmentReport.pdf*"))
-        if not found and not allow_missing_pdf:
-            errs.append(f"PDF not normalized: expected {pdf.name} in {misc}")
+    if legacy_names:
+        pdf = misc / f"{case_id}_TreatmentReport.pdf"
+        if not pdf.exists():
+            found = list(misc.glob(f"{case_id}_TreatmentReport.pdf*"))
+            if not found and not allow_missing_pdf:
+                errs.append(f"PDF not normalized: expected {pdf.name} in {misc}")
 
-    if not (mr / f"{case_id}_MRI.zip").exists():
-        errs.append(f"MRI zip missing: {mr / (case_id + '_MRI.zip')}")
+        if not (mr / f"{case_id}_MRI.zip").exists():
+            errs.append(f"MRI zip missing: {mr / (case_id + '_MRI.zip')}")
 
     stray_sessions = [p for p in case_root.iterdir() if p.is_dir() and SESSION_DIR_RE.match(p.name)]
     if stray_sessions:
@@ -68,11 +79,19 @@ def verify(case_root: Path, case_id: str, allow_missing_pdf: bool = False) -> li
 
     return errs
 
-def fix(case_root: Path, case_id: str) -> list[str]:
+def fix(
+    case_root: Path,
+    case_id: str,
+    *,
+    misc_dir_name: str | None = None,
+    mr_dir_name: str | None = None,
+    tdc_dir_name: str | None = None,
+    legacy_names: bool = False,
+) -> list[str]:
     changes: list[str] = []
-    misc = _ensure_dir(case_root / "Misc")
-    mr   = _ensure_dir(case_root / "MR DICOM")
-    tdc  = _ensure_dir(case_root / "TDC Sessions")
+    misc = _ensure_dir(case_root / (misc_dir_name or f"{case_id} Misc"))
+    mr   = _ensure_dir(case_root / (mr_dir_name or f"{case_id} MR DICOM"))
+    tdc  = _ensure_dir(case_root / (tdc_dir_name or f"{case_id} TDC Sessions"))
     applog = _ensure_dir(tdc / "applog")
     logs = _ensure_dir(applog / "Logs")
 
@@ -122,27 +141,28 @@ def fix(case_root: Path, case_id: str) -> list[str]:
             pass
 
     # 3) Normalize / relocate PDF (lenient)
-    cand = _find_best_pdf(case_root, case_id)
-    if cand:
-        target = misc / f"{case_id}_TreatmentReport.pdf"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if not target.exists():
-            try:
-                shutil.move(str(cand), str(target))
-                changes.append(f"MOVED PDF -> {target}")
-            except Exception:
-                pass
+    if legacy_names:
+        cand = _find_best_pdf(case_root, case_id)
+        if cand:
+            target = misc / f"{case_id}_TreatmentReport.pdf"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.exists():
+                try:
+                    shutil.move(str(cand), str(target))
+                    changes.append(f"MOVED PDF -> {target}")
+                except Exception:
+                    pass
 
-    # 4) Ensure MRI zip lives under MR DICOM
-    for p in case_root.rglob(f"{case_id}_MRI.zip"):
-        if p.parent.resolve() != mr.resolve():
-            dst = mr / p.name
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                shutil.move(str(p), str(dst))
-                changes.append(f"MOVED MRI zip -> {dst}")
-            except Exception:
-                pass
+        # 4) Ensure MRI zip lives under MR DICOM
+        for p in case_root.rglob(f"{case_id}_MRI.zip"):
+            if p.parent.resolve() != mr.resolve():
+                dst = mr / p.name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.move(str(p), str(dst))
+                    changes.append(f"MOVED MRI zip -> {dst}")
+                except Exception:
+                    pass
 
     # 5) Remove empty MR DICOM\\DICOM
     dcm = mr / "DICOM"
@@ -163,23 +183,48 @@ def main():
     ap.add_argument("case_root", type=Path)
     ap.add_argument("--id", required=True)
     ap.add_argument("--fix", action="store_true")
+    ap.add_argument("--misc-dir-name")
+    ap.add_argument("--mr-dir-name")
+    ap.add_argument("--tdc-dir-name")
+    ap.add_argument("--legacy-names", action="store_true")
     args = ap.parse_args()
 
-    errs = verify(args.case_root, args.id)
+    errs = verify(
+        args.case_root,
+        args.id,
+        misc_dir_name=args.misc_dir_name,
+        mr_dir_name=args.mr_dir_name,
+        tdc_dir_name=args.tdc_dir_name,
+        legacy_names=args.legacy_names,
+    )
     if errs:
         print("FAIL: Layout issues detected:")
         for e in errs:
             print(" -", e)
         if args.fix:
             print("\nAttempting to fix...")
-            changes = fix(args.case_root, args.id)
+            changes = fix(
+                args.case_root,
+                args.id,
+                misc_dir_name=args.misc_dir_name,
+                mr_dir_name=args.mr_dir_name,
+                tdc_dir_name=args.tdc_dir_name,
+                legacy_names=args.legacy_names,
+            )
             if changes:
                 print("Applied changes:")
                 for c in changes:
                     print(" -", c)
             else:
                 print("No changes applied.")
-            errs2 = verify(args.case_root, args.id)
+            errs2 = verify(
+                args.case_root,
+                args.id,
+                misc_dir_name=args.misc_dir_name,
+                mr_dir_name=args.mr_dir_name,
+                tdc_dir_name=args.tdc_dir_name,
+                legacy_names=args.legacy_names,
+            )
             if errs2:
                 print("\nRemaining issues:")
                 for e in errs2:

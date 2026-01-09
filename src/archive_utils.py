@@ -1,3 +1,7 @@
+# PURPOSE: Extract and create archives with optional 7-Zip preference.
+# INPUTS: Archive paths, destination dirs, and preference flags.
+# OUTPUTS: Extracted files or created zip archives.
+# NOTES: Falls back to zipfile if 7-Zip is unavailable.
 from __future__ import annotations
 
 import os

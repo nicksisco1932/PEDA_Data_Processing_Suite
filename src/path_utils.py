@@ -1,3 +1,7 @@
+# PURPOSE: Sanitize user-supplied path strings for consistent internal use.
+# INPUTS: Raw path strings from YAML/CLI (quoted/unquoted).
+# OUTPUTS: Normalized strings or Path objects.
+# NOTES: Strips quotes, expands env vars, rejects empty results.
 from __future__ import annotations
 
 import os

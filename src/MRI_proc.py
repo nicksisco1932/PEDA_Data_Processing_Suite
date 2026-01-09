@@ -1,4 +1,7 @@
-# MRI_proc.py
+# PURPOSE: Process MRI zip input and produce the canonical MR DICOM zip output.
+# INPUTS: MRI zip path, scratch/output dirs, and run flags.
+# OUTPUTS: <case_dir>/<case_id> MR DICOM/<input_zip.name> and staging artifacts.
+# NOTES: Uses archive_utils with optional 7-Zip preference.
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from logutil import ValidationError, ProcessingError, copy_with_integrity
+from src.logutil import ValidationError, ProcessingError, copy_with_integrity
 from src.archive_utils import create_zip_from_dir, extract_archive
 
 
@@ -20,20 +23,22 @@ def run(
     root: Path,
     case: str,
     input_zip: Path,
+    mr_dir: Path | None = None,
     scratch: Path,
     logger: logging.Logger | None = None,
     dry_run: bool = False,
+    legacy_names: bool = False,
 ) -> dict:
     log = logger or logging.getLogger(__name__)
     case_dir = root / case
-    mr_dir = case_dir / "MR DICOM"
+    mr_dir = mr_dir or (case_dir / f"{case} MR DICOM")
 
     if not input_zip.exists() or not input_zip.is_file() or input_zip.suffix.lower() != ".zip":
         raise ValidationError(f"MRI input not found or not .zip: {input_zip}")
 
     bak = scratch / (input_zip.name + ".bak")
     out_zip = scratch / "MRI_anonymized.zip"
-    final_zip = mr_dir / f"{case}_MRI.zip"
+    final_zip = mr_dir / (f"{case}_MRI.zip" if legacy_names else input_zip.name)
 
     if dry_run:
         log.info("MRI dry-run: would copy, extract, and re-zip %s", input_zip)

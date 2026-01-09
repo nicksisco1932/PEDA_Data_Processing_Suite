@@ -1,3 +1,7 @@
+# PURPOSE: Capture file metadata and write run manifests.
+# INPUTS: Paths and manifest payload dicts.
+# OUTPUTS: JSON manifest files.
+# NOTES: Hashing optional via sha256.
 from __future__ import annotations
 
 import json
@@ -5,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-from logutil import sha256_file
+from src.logutil import sha256_file
 
 
 def file_metadata(path: Path, *, compute_hash: bool = False) -> Dict[str, Any]:

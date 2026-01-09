@@ -55,6 +55,8 @@ profile_*.txt          # cProfile dumps, etc.
 # --- Project-specific: extra data/outputs (belt & suspenders) ---
 /tmp/
 /tmp/**/
+/logs/
+/tests/_tmp_output/
 /list                  # looks like a generated helper file in your root
 **/DICOM/**            # raw DICOM folders if they appear with different casing
 **/MR DICOM/**         # already covered, keep both
@@ -79,7 +81,6 @@ list
 cmd/
 tmp/
 testRes
-tests/
 
 # Docs and markdown tests
 NOTES.md

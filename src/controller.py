@@ -1,3 +1,7 @@
+# PURPOSE: CLI entrypoint that orchestrates pipeline runs and writes logs/manifests.
+# INPUTS: CLI args and resolved config paths (MRI/TDC/PDF, root, scratch, flags).
+# OUTPUTS: Case output tree, run log, and manifest JSON.
+# NOTES: Handles run status and error reporting for downstream steps.
 from __future__ import annotations
 
 import argparse
@@ -16,7 +20,7 @@ if str(ROOT) not in sys.path:
 
 import MRI_proc
 import TDC_proc
-from logutil import (
+from src.logutil import (
     init_logger,
     StatusManager,
     StepTimer,
@@ -24,9 +28,8 @@ from logutil import (
     ProcessingError,
     UnexpectedError,
 )
-from manifest import file_metadata, write_manifest
-from pipeline_config import add_bool_arg, resolve_config
-from src.path_utils import sanitize_path_str
+from src.manifest import file_metadata, write_manifest
+from src.pipeline_config import add_bool_arg, resolve_config
 
 
 def _validate_zip(path: Path, label: str, raw_value: Optional[str] = None) -> None:
@@ -46,6 +49,7 @@ def _assert_exists(path: Path, label: str) -> None:
 def _build_plan(
     *,
     case_dir: Path,
+    misc_dir: Path,
     scratch: Path,
     mr_dir: Path,
     tdc_dir: Path,
@@ -61,14 +65,17 @@ def _build_plan(
     test_mode: bool,
     allow_workspace_zips: bool,
     clean_scratch: bool,
+    legacy_names: bool,
 ) -> List[str]:
     plan: List[str] = []
     plan.append(f"Create case dir: {case_dir}")
-    plan.append(f"Create output dir: {case_dir / 'Misc'}")
-    plan.append(f"Create output dir: {case_dir / 'MR DICOM'}")
-    plan.append(f"Create output dir: {case_dir / 'TDC Sessions'}")
-    plan.append(f"Create output dir: {case_dir / 'TDC Sessions' / 'applog' / 'Logs'}")
-    plan.append(f"TDC Raw output dir created if TDC produces it: {case_dir / 'TDC Sessions' / 'Raw'}")
+    plan.append(f"Create output dir: {misc_dir}")
+    plan.append(f"Create output dir: {mr_dir}")
+    plan.append(f"Create output dir: {tdc_dir}")
+    plan.append(f"Create output dir: {tdc_dir / 'applog' / 'Logs'}")
+    plan.append(
+        f"TDC Raw output dir created if TDC produces it: {tdc_dir / '<session>' / 'Raw'}"
+    )
     plan.append(f"Create scratch dir: {scratch}")
     if not skip_mri and mri_input:
         plan.append(
@@ -76,13 +83,14 @@ def _build_plan(
         )
         plan.append(f"Extract MRI zip into temp under: {scratch}")
         plan.append(f"Create MRI anonymized zip in scratch: {scratch / 'MRI_anonymized.zip'}")
-        plan.append(f"Copy MRI final zip to: {mr_dir / (case + '_MRI.zip')}")
+        mri_name = f"{case}_MRI.zip" if legacy_names else mri_input.name
+        plan.append(f"Copy MRI final zip to: {mr_dir / mri_name}")
     if not skip_tdc and tdc_input:
         plan.append(
             f"Copy TDC zip to scratch backup: {tdc_input} -> {scratch / (tdc_input.name + '.bak')}"
         )
         plan.append("Extract TDC zip into temp under scratch")
-        plan.append("Copy Logs/ to case Misc/Logs if present")
+        plan.append(f"Copy Logs/ to {misc_dir / 'Logs'} if present")
         plan.append(
             "Stage TDC session in scratch/TDC_staged and copy top-level dirs as directories"
         )
@@ -95,8 +103,9 @@ def _build_plan(
             plan.append("Test-mode: keep staging lightweight (no zipping)")
         plan.append(f"Copy staged TDC session to: {tdc_dir / '<session_name>'}")
     if pdf_input:
+        pdf_name = f"{case}_TreatmentReport.pdf" if legacy_names else pdf_input.name
         plan.append(
-            f"Copy treatment report to: {case_dir / 'Misc' / (case + '_TreatmentReport.pdf')}"
+            f"Copy treatment report to: {misc_dir / pdf_name}"
         )
     plan.append(f"Write log file to: {log_dir / (case + '__' + run_id + '.log')}")
     plan.append(f"Write manifest to: {manifest_path}")
@@ -136,6 +145,11 @@ def main() -> int:
     add_bool_arg(
         parser, "allow_workspace_zips", "Allow zip archives under TDC workspace"
     )
+    add_bool_arg(
+        parser,
+        "legacy_filename_rules",
+        "Enable legacy filename-based auto discovery and output naming",
+    )
     args = parser.parse_args()
 
     cli_overrides = {
@@ -157,11 +171,12 @@ def main() -> int:
         "hash_outputs": args.hash_outputs,
         "test_mode": args.test_mode,
         "allow_workspace_zips": args.allow_workspace_zips,
+        "legacy_filename_rules": args.legacy_filename_rules,
     }
 
     try:
         cfg, run_id = resolve_config(
-            config_path=Path(sanitize_path_str(args.config)) if args.config else None,
+            config_path=args.config,
             cli_overrides=cli_overrides,
         )
     except ValidationError as exc:
@@ -171,9 +186,9 @@ def main() -> int:
     root: Path = cfg["root"]
     case: str = cfg["case"]
     case_dir = cfg.get("case_dir") or (root / case)
-    mr_dir = cfg.get("mr_dir") or (case_dir / "MR DICOM")
-    tdc_dir = cfg.get("tdc_dir") or (case_dir / "TDC Sessions")
-    misc_dir = cfg.get("misc_dir") or (case_dir / "Misc")
+    mr_dir = cfg.get("mr_dir") or (case_dir / f"{case} MR DICOM")
+    tdc_dir = cfg.get("tdc_dir") or (case_dir / f"{case} TDC Sessions")
+    misc_dir = cfg.get("misc_dir") or (case_dir / f"{case} Misc")
     scratch: Path = cfg["scratch"] or (case_dir / "scratch")
     if cfg.get("log_dir"):
         log_dir = cfg["log_dir"]
@@ -188,6 +203,7 @@ def main() -> int:
     hash_outputs: bool = cfg["hash_outputs"]
     test_mode: bool = cfg["test_mode"]
     allow_workspace_zips: bool = cfg["allow_workspace_zips"]
+    legacy_filename_rules: bool = cfg["legacy_filename_rules"]
     run_block = cfg.get("run")
     if not isinstance(run_block, dict):
         run_block = {}
@@ -197,6 +213,7 @@ def main() -> int:
         run_block["flags"] = flags
     flags["test_mode"] = test_mode
     flags["allow_workspace_zips"] = allow_workspace_zips
+    flags["legacy_filename_rules"] = legacy_filename_rules
     cfg["run"] = run_block
 
     logger, log_file, rich_available = init_logger(
@@ -206,6 +223,7 @@ def main() -> int:
     logger.info("Dry run: %s", dry_run)
     logger.info("Test mode: %s", test_mode)
     logger.info("Allow workspace zips: %s", allow_workspace_zips)
+    logger.info("Legacy filename rules: %s", legacy_filename_rules)
     raw_paths = cfg.get("_raw_paths") if isinstance(cfg.get("_raw_paths"), dict) else {}
     logger.info("Resolved inputs: mri=%s tdc=%s", cfg.get("mri_input"), cfg.get("tdc_input"))
     auto_info = cfg.get("auto_discovery") or {}
@@ -230,13 +248,14 @@ def main() -> int:
                     cand.get("size_bytes"),
                 )
 
-    manifest_dir = cfg.get("manifest_dir") or (case_dir / "run_manifests")
+    manifest_dir = cfg.get("manifest_dir") or log_dir
     manifest_name = cfg.get("manifest_name") or f"{case}__{run_id}__manifest.json"
     manifest_path = Path(manifest_dir) / manifest_name
     step_results: Dict[str, Any] = {}
     artifacts: Dict[str, Any] = {"inputs": {}, "outputs": {}}
     planned_actions = _build_plan(
         case_dir=case_dir,
+        misc_dir=misc_dir,
         scratch=scratch,
         mr_dir=mr_dir,
         tdc_dir=tdc_dir,
@@ -252,6 +271,7 @@ def main() -> int:
         test_mode=test_mode,
         allow_workspace_zips=allow_workspace_zips,
         clean_scratch=clean_scratch,
+        legacy_names=legacy_filename_rules,
     )
 
     status_mgr = StatusManager() if rich_available else None
@@ -263,24 +283,24 @@ def main() -> int:
             logger=logger, step_name="Controller validations", results=step_results, status_mgr=status_mgr
         ):
             expected_case_name = case
-            expected_mr_name = "MR DICOM"
-            expected_tdc_name = "TDC Sessions"
-            expected_misc_name = "Misc"
+            expected_mr_name = f"{case} MR DICOM"
+            expected_tdc_name = f"{case} TDC Sessions"
+            expected_misc_name = f"{case} Misc"
 
-            legacy_misc = case_dir / f"{case} Misc"
-            legacy_mr = case_dir / f"{case} MR DICOM"
-            legacy_tdc = case_dir / f"{case} TDC Sessions"
+            legacy_misc = case_dir / "Misc"
+            legacy_mr = case_dir / "MR DICOM"
+            legacy_tdc = case_dir / "TDC Sessions"
             legacy_dirs = [legacy_misc, legacy_mr, legacy_tdc]
             legacy_present = [p for p in legacy_dirs if p.exists()]
             if legacy_present:
                 if all(p.exists() for p in (misc_dir, mr_dir, tdc_dir)):
                     logger.warning(
-                        "Legacy case-prefixed folders exist; using new unprefixed schema. legacy=%s",
+                        "Legacy unprefixed folders exist; using case-prefixed schema. legacy=%s",
                         [str(p) for p in legacy_present],
                     )
                 else:
                     logger.warning(
-                        "Legacy case-prefixed folders exist; creating new unprefixed folders at %s, %s, %s",
+                        "Legacy unprefixed folders exist; creating case-prefixed folders at %s, %s, %s",
                         misc_dir,
                         mr_dir,
                         tdc_dir,
@@ -350,9 +370,11 @@ def main() -> int:
                         root=root,
                         case=case,
                         input_zip=Path(cfg["mri_input"]),
+                        mr_dir=mr_dir,
                         scratch=scratch,
                         logger=logger,
                         dry_run=False,
+                        legacy_names=legacy_filename_rules,
                     )
                     artifacts["outputs"]["mri"] = mri_artifacts
                     _assert_exists(mri_artifacts["final_zip"], "MRI final zip")
@@ -367,12 +389,15 @@ def main() -> int:
                         root=root,
                         case=case,
                         input_zip=Path(cfg["tdc_input"]),
+                        tdc_dir=tdc_dir,
+                        misc_dir=misc_dir,
                         scratch=scratch,
                         date_shift_days=date_shift_days,
                         logger=logger,
                         dry_run=False,
                         test_mode=test_mode,
                         allow_workspace_zips=allow_workspace_zips,
+                        legacy_filename_rules=legacy_filename_rules,
                         step_results=step_results,
                         status_mgr=status_mgr,
                     )
@@ -389,14 +414,19 @@ def main() -> int:
             logger=logger, step_name="Treatment report", results=step_results, status_mgr=status_mgr
         ):
             pdf_input = Path(cfg["pdf_input"]) if cfg.get("pdf_input") else None
-            target_pdf = misc_dir / f"{case}_TreatmentReport.pdf"
+            target_pdf = None
+            if pdf_input:
+                if legacy_filename_rules:
+                    target_pdf = misc_dir / f"{case}_TreatmentReport.pdf"
+                else:
+                    target_pdf = misc_dir / pdf_input.name
             if dry_run:
-                if pdf_input:
+                if pdf_input and target_pdf:
                     logger.info("Dry-run: would copy report %s -> %s", pdf_input, target_pdf)
                 else:
                     logger.info("Dry-run: no treatment report configured.")
             else:
-                if pdf_input and pdf_input.exists():
+                if pdf_input and target_pdf and pdf_input.exists():
                     target_pdf.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(pdf_input, target_pdf)
                     logger.info("Treatment report copied: %s", target_pdf)
@@ -409,31 +439,55 @@ def main() -> int:
             if dry_run:
                 logger.info("Dry-run: structure_guard would validate/fix layout.")
             else:
-                import structure_guard as sg
+                import src.structure_guard as sg
 
-                pdf_expected = misc_dir / f"{case}_TreatmentReport.pdf"
                 pdf_candidates = []
-                if not pdf_expected.exists():
-                    pdf_candidates = [
-                        p for p in case_dir.rglob("*.pdf") if p != pdf_expected
-                    ]
-                    if not pdf_candidates:
-                        logger.warning(
-                            "Treatment report missing; expected %s",
-                            pdf_expected,
-                        )
+                if legacy_filename_rules:
+                    pdf_expected = misc_dir / f"{case}_TreatmentReport.pdf"
+                    if not pdf_expected.exists():
+                        pdf_candidates = [
+                            p for p in case_dir.rglob("*.pdf") if p != pdf_expected
+                        ]
+                        if not pdf_candidates:
+                            logger.warning(
+                                "Treatment report missing; expected %s",
+                                pdf_expected,
+                            )
 
-                errs = sg.verify(case_dir, case, allow_missing_pdf=True)
+                errs = sg.verify(
+                    case_dir,
+                    case,
+                    allow_missing_pdf=True,
+                    misc_dir_name=misc_dir.name,
+                    mr_dir_name=mr_dir.name,
+                    tdc_dir_name=tdc_dir.name,
+                    legacy_names=legacy_filename_rules,
+                )
                 force_fix = bool(pdf_candidates)
                 if errs or force_fix:
                     logger.info("structure_guard detected layout issues.")
                     for e in errs:
                         logger.info(" - %s", e)
-                    changes = sg.fix(case_dir, case)
+                    changes = sg.fix(
+                        case_dir,
+                        case,
+                        misc_dir_name=misc_dir.name,
+                        mr_dir_name=mr_dir.name,
+                        tdc_dir_name=tdc_dir.name,
+                        legacy_names=legacy_filename_rules,
+                    )
                     if changes:
                         for c in changes:
                             logger.info(" - %s", c)
-                    errs2 = sg.verify(case_dir, case, allow_missing_pdf=True)
+                    errs2 = sg.verify(
+                        case_dir,
+                        case,
+                        allow_missing_pdf=True,
+                        misc_dir_name=misc_dir.name,
+                        mr_dir_name=mr_dir.name,
+                        tdc_dir_name=tdc_dir.name,
+                        legacy_names=legacy_filename_rules,
+                    )
                     if errs2:
                         raise ProcessingError(f"structure_guard failed: {errs2}")
 
@@ -499,8 +553,15 @@ def main() -> int:
                 Path(path), compute_hash=hash_outputs
             )
 
-        pdf_output = misc_dir / f"{case}_TreatmentReport.pdf"
-        if pdf_output.exists():
+        pdf_output = None
+        if cfg.get("pdf_input"):
+            pdf_name = (
+                f"{case}_TreatmentReport.pdf"
+                if legacy_filename_rules
+                else Path(cfg["pdf_input"]).name
+            )
+            pdf_output = misc_dir / pdf_name
+        if pdf_output and pdf_output.exists():
             manifest_payload["outputs"]["treatment_report"] = file_metadata(
                 pdf_output, compute_hash=hash_outputs
             )
@@ -542,6 +603,16 @@ def main() -> int:
         except Exception as exc:
             logger.error("Failed to write manifest: %s", exc)
 
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            run_log_copy = log_dir / f"RUN_{run_id}.log"
+            if log_file.exists() and log_file.resolve() != run_log_copy.resolve():
+                shutil.copy2(log_file, run_log_copy)
+            run_manifest = log_dir / f"RUN_{run_id}_manifest.json"
+            write_manifest(run_manifest, manifest_payload)
+        except Exception as exc:
+            logger.error("Failed to write legacy run artifacts: %s", exc)
+
         logger.info("Run complete: %s", status)
         logger.info("Artifacts:")
         if not skip_mri:
@@ -580,14 +651,9 @@ def main() -> int:
             logger.info("Canonical schema tree:")
             schema_lines = [
                 str(case_dir),
-                str(misc_dir),
-                str(misc_dir / f"{case}_TreatmentReport.pdf"),
                 str(mr_dir),
-                str(mr_dir / f"{case}_MRI.zip"),
-                f"{case_dir / f'{case} PEDAv9.1.3-Data.zip'} (placeholder)",
                 str(tdc_dir),
-                str(tdc_dir / "applog" / "Logs"),
-                str(tdc_dir / "Raw"),
+                str(misc_dir),
             ]
             for line in schema_lines:
                 logger.info(line)

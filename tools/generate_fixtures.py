@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# PURPOSE: Generate tiny MRI/TDC fixture zips for fast test runs.
+# INPUTS: None (writes under tests/fixtures).
+# OUTPUTS: tests/fixtures/mri_dummy.zip and tests/fixtures/tdc_dummy.zip.
+# NOTES: Idempotent; uses stdlib sqlite3/zipfile.
 from __future__ import annotations
 
 import shutil

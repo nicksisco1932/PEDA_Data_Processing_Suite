@@ -1,4 +1,7 @@
-# TDC_proc.py
+# PURPOSE: Stage and normalize TDC session data into the canonical workspace.
+# INPUTS: TDC zip path, scratch/output dirs, and run flags.
+# OUTPUTS: Staged and final TDC Sessions workspace with local.db and Raw/.
+# NOTES: Resolves wrapped/unwrapped zips and enforces no zips in workspace by default.
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from localdb_anon import anonymize_in_place
-from logutil import ProcessingError, StepTimer, ValidationError, copy_with_integrity
+from src.localdb_anon import anonymize_in_place
+from src.logutil import ProcessingError, StepTimer, ValidationError, copy_with_integrity
 from src.archive_utils import extract_archive
 
 
@@ -89,19 +92,22 @@ def run(
     root: Path,
     case: str,
     input_zip: Path,
+    tdc_dir: Path | None = None,
+    misc_dir: Path | None = None,
     scratch: Path,
     date_shift_days: int = 137,
     logger: logging.Logger | None = None,
     dry_run: bool = False,
     test_mode: bool = False,
     allow_workspace_zips: bool = False,
+    legacy_filename_rules: bool = False,
     step_results: Optional[Dict[str, Any]] = None,
     status_mgr: Optional[Any] = None,
 ) -> dict:
     log = logger or logging.getLogger(__name__)
     case_dir = root / case
-    tdc_dir = case_dir / "TDC Sessions"
-    misc_dir = case_dir / "Misc"
+    tdc_dir = tdc_dir or (case_dir / f"{case} TDC Sessions")
+    misc_dir = misc_dir or (case_dir / f"{case} Misc")
 
     if not input_zip.exists() or not input_zip.is_file() or input_zip.suffix.lower() != ".zip":
         raise ValidationError(f"TDC input not found or not .zip: {input_zip}")
@@ -198,6 +204,10 @@ def run(
                 shutil.copytree(child, dest_dir)
                 log.info("Copied dir -> %s", dest_dir)
             elif child.suffix.lower() == ".zip":
+                if not legacy_filename_rules:
+                    raise ValidationError(
+                        f"Zip found in session (legacy_filename_rules required to expand): {child}"
+                    )
                 if child.name.lower() == "raw.zip":
                     dest_dir = staged_session / "Raw"
                 else:
@@ -238,7 +248,8 @@ def run(
             )
         log.info("Anonymized local.db (tables: %s)", len(summary.get("tables", [])))
 
-        _expand_workspace_zips(staged_session, log)
+        if legacy_filename_rules:
+            _expand_workspace_zips(staged_session, log)
 
         if staged_session is None or staged_db is None or session_name is None:
             raise ValidationError("TDC staging failed; missing staged outputs")
@@ -251,7 +262,8 @@ def run(
         zipped = list(staged_session.rglob("*.zip"))
         if zipped and not allow_workspace_zips:
             raise ValidationError(
-                "Zip archives present in workspace: "
+                "Zip archives present in workspace (set allow_workspace_zips "
+                "or legacy_filename_rules to expand): "
                 + ", ".join(str(p) for p in zipped)
             )
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# PURPOSE: Deterministic in-place anonymization for TDC local.db.
+# INPUTS: Local DB path or case/session path, plus anonymization options.
+# OUTPUTS: Updated sqlite database written in place (optional temp copy).
+# NOTES: Uses salted hashes and date shifting.
 r"""
 localdb_anon.py  (v1.0.2)
 Deterministic, in-place anonymization for a TDC Sessions/local.db

@@ -1,3 +1,7 @@
+# PURPOSE: Logging setup, timing helpers, and pipeline error types.
+# INPUTS: Case/run identifiers, log directory, log level.
+# OUTPUTS: Configured logger, log file path, timing status records.
+# NOTES: Uses Rich console logging when available.
 from __future__ import annotations
 
 import hashlib

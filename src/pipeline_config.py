@@ -1,3 +1,7 @@
+# PURPOSE: Load YAML/CLI config, normalize paths, and derive case layout defaults.
+# INPUTS: Config file path and CLI arguments.
+# OUTPUTS: Resolved config dict used by controller.
+# NOTES: Records raw path strings for diagnostics.
 from __future__ import annotations
 
 import argparse
@@ -9,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, List
 
-from logutil import ValidationError
+from src.logutil import ValidationError
 from src.path_utils import sanitize_path_str
 
 PATH_KEYS = {
@@ -45,12 +49,13 @@ DEFAULTS: Dict[str, Any] = {
     "hash_outputs": False,
     "test_mode": False,
     "allow_workspace_zips": False,
+    "legacy_filename_rules": False,
 }
 
 CANONICAL_LAYOUT = {
-    "mr_dir_name": "MR DICOM",
-    "tdc_dir_name": "TDC Sessions",
-    "misc_dir_name": "Misc",
+    "mr_dir_name": "{case_id} MR DICOM",
+    "tdc_dir_name": "{case_id} TDC Sessions",
+    "misc_dir_name": "{case_id} Misc",
 }
 
 CASE_ID_RE = re.compile(r"(\d{3})[-_](\d{2})[-_](\d{3,})", re.IGNORECASE)
@@ -145,11 +150,18 @@ def _apply_overrides(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[st
 
 
 def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    if not isinstance(cfg.get("case"), dict):
-        return dict(cfg)
-
     raw_paths = cfg.get("_raw_paths")
     raw_paths = dict(raw_paths) if isinstance(raw_paths, dict) else {}
+
+    if not isinstance(cfg.get("case"), dict):
+        flat = dict(cfg)
+        for key in PATH_KEYS:
+            val = flat.get(key)
+            if isinstance(val, str):
+                flat[key] = _sanitize_path_value(val, key, raw_paths)
+        if raw_paths:
+            flat["_raw_paths"] = raw_paths
+        return flat
 
     case_block = cfg.get("case", {})
     inputs_block = cfg.get("inputs", {})
@@ -205,10 +217,12 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     log_dir = logging_block.get("dir")
     if log_dir:
         log_dir = _replace_tokens(str(log_dir), mapping)
+        log_dir = _sanitize_path_value(log_dir, "log_dir", raw_paths)
 
     manifest_dir = logging_block.get("manifest_dir")
     if manifest_dir:
         manifest_dir = _replace_tokens(str(manifest_dir), mapping)
+        manifest_dir = _sanitize_path_value(manifest_dir, "manifest_dir", raw_paths)
 
     manifest_name = logging_block.get("manifest_name")
     if manifest_name:
@@ -221,6 +235,9 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     scratch_policy = run_block.get("scratch", {}).get(
         "policy", cfg.get("scratch_policy", DEFAULTS["scratch_policy"])
     )
+    scratch_val = run_block.get("scratch", {}).get("dir", cfg.get("scratch"))
+    if isinstance(scratch_val, str):
+        scratch_val = _sanitize_path_value(scratch_val, "scratch", raw_paths)
 
     flat = {
         **cfg,
@@ -241,7 +258,7 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "clean_scratch": run_block.get("scratch", {}).get(
             "clean_on_success", cfg.get("clean_scratch", DEFAULTS["clean_scratch"])
         ),
-        "scratch": run_block.get("scratch", {}).get("dir", cfg.get("scratch")),
+        "scratch": scratch_val,
         "skip_mri": run_block.get("flags", {}).get(
             "skip_mri", cfg.get("skip_mri", DEFAULTS["skip_mri"])
         ),
@@ -257,6 +274,10 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "allow_workspace_zips": run_block.get("flags", {}).get(
             "allow_workspace_zips",
             cfg.get("allow_workspace_zips", DEFAULTS["allow_workspace_zips"]),
+        ),
+        "legacy_filename_rules": run_block.get("flags", {}).get(
+            "legacy_filename_rules",
+            cfg.get("legacy_filename_rules", DEFAULTS["legacy_filename_rules"]),
         ),
         "hash_outputs": run_block.get(
             "hash_outputs", cfg.get("hash_outputs", DEFAULTS["hash_outputs"])
@@ -333,17 +354,32 @@ def _resolve_auto_inputs(cfg: Dict[str, Any]) -> Dict[str, Any]:
         return cfg
 
     mode = inputs.get("mode", "auto")
+    legacy = bool(cfg.get("legacy_filename_rules"))
+    if mode == "auto" and not legacy:
+        if cfg.get("mri_input") or cfg.get("tdc_input") or cfg.get("pdf_input"):
+            return cfg
+        raise ValidationError(
+            "Auto-discovery is disabled when legacy_filename_rules is false; "
+            "use inputs.mode=explicit or set run.flags.legacy_filename_rules=true"
+        )
     if mode == "explicit":
         explicit = inputs.get("explicit", {}) if isinstance(inputs.get("explicit"), dict) else {}
         if cfg.get("mri_input") is None:
-            cfg["mri_input"] = explicit.get("mri_zip")
+            cfg["mri_input"] = _sanitize_path_value(
+                explicit.get("mri_zip"), "mri_input", cfg.setdefault("_raw_paths", {})
+            )
         if cfg.get("tdc_input") is None:
-            cfg["tdc_input"] = explicit.get("tdc_zip")
+            cfg["tdc_input"] = _sanitize_path_value(
+                explicit.get("tdc_zip"), "tdc_input", cfg.setdefault("_raw_paths", {})
+            )
         if cfg.get("pdf_input") is None:
-            cfg["pdf_input"] = (
+            pdf_val = (
                 explicit.get("pdf_input")
                 or explicit.get("pdf")
                 or explicit.get("treatment_report")
+            )
+            cfg["pdf_input"] = _sanitize_path_value(
+                pdf_val, "pdf_input", cfg.setdefault("_raw_paths", {})
             )
         return cfg
 
@@ -354,7 +390,7 @@ def _resolve_auto_inputs(cfg: Dict[str, Any]) -> Dict[str, Any]:
     pick = search.get("pick", "newest")
 
     case_dir = Path(cfg["case_dir"]) if cfg.get("case_dir") else None
-    case_aliases = [a.lower() for a in _case_id_aliases(cfg.get("case"))]
+    case_aliases = [a.lower() for a in _case_id_aliases(cfg.get("case"))] if legacy else []
     resolved_roots: List[Path] = []
     if not roots and case_dir:
         roots = [
@@ -362,7 +398,7 @@ def _resolve_auto_inputs(cfg: Dict[str, Any]) -> Dict[str, Any]:
             "{case_dir}",
             "{case.root}\\incoming\\{case_id}",
         ]
-    if not mri_globs:
+    if legacy and not mri_globs:
         mri_globs = ["*MRI*.zip", "MRI_*.zip", "MR_*.zip", "*MR*.zip", "*DICOM*.zip"]
     for r in roots:
         if not isinstance(r, str):
@@ -377,9 +413,9 @@ def _resolve_auto_inputs(cfg: Dict[str, Any]) -> Dict[str, Any]:
             },
         )
         try:
-            r = sanitize_path_str(r)
-        except ValueError as exc:
-            raise ValidationError(f"Invalid search root: raw={r!r} error={exc}") from exc
+            r = _sanitize_path_value(r, "search_root", cfg.setdefault("_raw_paths", {}))
+        except ValidationError:
+            raise
         rp = Path(r)
         if not rp.is_absolute() and case_dir:
             rp = case_dir / rp
@@ -486,6 +522,7 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         "hash_outputs",
         "test_mode",
         "allow_workspace_zips",
+        "legacy_filename_rules",
     ):
         val = cfg.get(key)
         if not isinstance(val, bool):
@@ -499,7 +536,7 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
 
 def resolve_config(
     *,
-    config_path: Optional[Path],
+    config_path: Optional[Path | str],
     cli_overrides: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], str]:
     cli_raw_paths: Dict[str, str] = {}
@@ -512,9 +549,10 @@ def resolve_config(
         cli_overrides = sanitized_overrides
 
     if config_path:
-        if not config_path.exists():
-            raise ValidationError(f"Config file not found: {config_path}")
-        cfg_data = _load_config_file(config_path)
+        cfg_path = Path(sanitize_path_str(str(config_path)))
+        if not cfg_path.exists():
+            raise ValidationError(f"Config file not found: {cfg_path}")
+        cfg_data = _load_config_file(cfg_path)
     else:
         cfg_data = {}
 
@@ -532,7 +570,6 @@ def resolve_config(
     merged = _expand_templates(merged)
     merged = _resolve_scratch(merged)
     merged = _resolve_auto_inputs(merged)
-    merged = _sanitize_paths(merged)
     if cli_raw_paths:
         raw_paths = merged.get("_raw_paths")
         raw_paths = dict(raw_paths) if isinstance(raw_paths, dict) else {}

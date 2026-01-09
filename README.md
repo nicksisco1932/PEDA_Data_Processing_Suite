@@ -66,7 +66,7 @@ Primary orchestrator coordinating the entire pipeline.
 
 ---
 
-### **4) `structure_guard.py` — v0.2**  
+### **4) `src/structure_guard.py` — v0.2**  
 Verifies and repairs post-run layout.
 
 **Enforces**
