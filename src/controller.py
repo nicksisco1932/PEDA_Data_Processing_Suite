@@ -753,27 +753,6 @@ def main() -> int:
     logger.info("Legacy filename rules: %s", legacy_filename_rules)
     raw_paths = cfg.get("_raw_paths") if isinstance(cfg.get("_raw_paths"), dict) else {}
     logger.info("Resolved inputs: mri=%s tdc=%s", cfg.get("mri_input"), cfg.get("tdc_input"))
-    auto_info = cfg.get("auto_discovery") or {}
-    for key in ("mri", "tdc"):
-        info = auto_info.get(key)
-        if not info:
-            continue
-        candidates = info.get("candidates") or []
-        if len(candidates) > 1:
-            logger.info(
-                "Auto-discovery %s: pick=%s filtered_by_case_id=%s selected=%s",
-                key,
-                info.get("pick"),
-                info.get("filtered_by_case_id"),
-                info.get("selected"),
-            )
-            for cand in candidates:
-                logger.info(
-                    " - candidate: %s (mtime=%s size=%s)",
-                    cand.get("path"),
-                    cand.get("mtime"),
-                    cand.get("size_bytes"),
-                )
 
     manifest_dir = cfg.get("manifest_dir") or log_dir
     manifest_name = cfg.get("manifest_name") or f"{case}__{run_id}__manifest.json"
@@ -1062,18 +1041,8 @@ def main() -> int:
             "log_file": str(log_file),
         }
 
-        try:
-            from importlib.metadata import version  # type: ignore
-
-            manifest_payload["versions"]["rich"] = version("rich")
-        except Exception:
-            manifest_payload["versions"]["rich"] = None
-        try:
-            from importlib.metadata import version  # type: ignore
-
-            manifest_payload["versions"]["yaml"] = version("PyYAML")
-        except Exception:
-            manifest_payload["versions"]["yaml"] = None
+        manifest_payload["versions"]["rich"] = None
+        manifest_payload["versions"]["yaml"] = None
 
         for label, path in artifacts.get("inputs", {}).items():
             manifest_payload["inputs"][label] = file_metadata(
@@ -1130,16 +1099,6 @@ def main() -> int:
         except Exception as exc:
             logger.error("Failed to write manifest: %s", exc)
 
-        try:
-            log_dir.mkdir(parents=True, exist_ok=True)
-            run_log_copy = log_dir / f"RUN_{run_id}.log"
-            if log_file.exists() and log_file.resolve() != run_log_copy.resolve():
-                shutil.copy2(log_file, run_log_copy)
-            run_manifest = log_dir / f"RUN_{run_id}_manifest.json"
-            write_manifest(run_manifest, manifest_payload)
-        except Exception as exc:
-            logger.error("Failed to write legacy run artifacts: %s", exc)
-
         logger.info("Run complete: %s", status)
         logger.info("Artifacts:")
         if not skip_mri:
@@ -1154,36 +1113,6 @@ def main() -> int:
             )
         logger.info(" - Log file: %s", log_file)
         logger.info(" - Manifest: %s", manifest_path)
-
-        manifest_meta = file_metadata(manifest_path, compute_hash=False)
-
-        logger.info("Proof:")
-        for key, meta in manifest_payload.get("outputs", {}).items():
-            if isinstance(meta, dict) and meta.get("exists") is not False:
-                logger.info(
-                    " - %s: size=%s mtime=%s sha256=%s",
-                    key,
-                    meta.get("size_bytes"),
-                    meta.get("mtime"),
-                    meta.get("sha256"),
-                )
-        if manifest_meta.get("exists"):
-            logger.info(
-                " - manifest: size=%s mtime=%s",
-                manifest_meta.get("size_bytes"),
-                manifest_meta.get("mtime"),
-            )
-
-        if status == "SUCCESS":
-            logger.info("Canonical schema tree:")
-            schema_lines = [
-                str(case_dir),
-                str(mr_dir),
-                str(tdc_dir),
-                str(misc_dir),
-            ]
-            for line in schema_lines:
-                logger.info(line)
 
         sys.stdout.write(f"{status} case={case} run_id={run_id}\n")
 
