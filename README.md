@@ -64,9 +64,11 @@ D:\Data_Clean\017_01-474
 +-- 017_01-474 PEDAv9.1.3-Data.zip (placeholder)
 |
 +-- TDC Sessions
+    +-- _2025-11-05--07-05-25 122867438\
     +-- applog\Logs\
     |   +-- 017-01-474_log.txt
     +-- Raw\2025-09-29\
+
 ```
 
 Incoming discovery (if used) checks:
