@@ -11,7 +11,14 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 from src.annon_logs import get_annon_logs_dir
+from src.logutil import ProcessingError
 from src.pipeline_steps.cleanup_artifacts import cleanup_artifacts
+from src.tools.matlab_runner import (
+    build_matlab_batch_cmd,
+    resolve_matlab_exe,
+    resolve_peda_main_dir,
+    run_matlab_batch,
+)
 from src.tools.sqlite_artifact_cleanup import cleanup_sqlite_sidecars
 
 
@@ -48,9 +55,13 @@ def run_peda_step(
     peda_version: str = "v9.1.3",
     enabled: bool = True,
     mode: str = "stub",
+    matlab_exe: Path | str | None = None,
+    peda_root: Path | str | None = None,
+    input_dir_mode: str = "case_root",
 ) -> Dict[str, Any]:
     log = logging.getLogger(__name__)
     case_dir = Path(case_dir)
+    case_dir.mkdir(parents=True, exist_ok=True)
 
     if not enabled:
         log.info("PEDA step skipped (disabled).")
@@ -63,11 +74,16 @@ def run_peda_step(
     peda_out_dir = case_dir / peda_dir_name
     applog_dir = peda_out_dir / "applog"
     results_dir = peda_out_dir / "Results"
-    annon_logs_dir = get_annon_logs_dir(case_dir)
-    stub_log_path = annon_logs_dir / "PEDA_run_log.txt"
+
+    matlab_log_path: Path | None = None
+    matlab_exe_path: Path | None = None
+    peda_main_dir: Path | None = None
+    stub_log_path: Path | None = None
 
     if mode == "stub":
         log.warning("PEDA step running in stub mode; MATLAB/MAIN_PEDA not executed.")
+        annon_logs_dir = get_annon_logs_dir(case_dir)
+        stub_log_path = annon_logs_dir / "PEDA_run_log.txt"
         applog_dir.mkdir(parents=True, exist_ok=True)
         results_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,14 +104,27 @@ def run_peda_step(
             encoding="utf-8",
         )
     elif mode == "matlab":
-        raise NotImplementedError(
-            "PEDA MATLAB execution not implemented. Expected behavior: locate MATLAB, "
-            "run with -logfile to peda_out_dir/applog/peda_log.txt, and capture stdout/stderr."
+        if input_dir_mode != "case_root":
+            raise ProcessingError(f"Unsupported PEDA input_dir_mode: {input_dir_mode}")
+        matlab_exe_path = resolve_matlab_exe(matlab_exe)
+        peda_main_dir = resolve_peda_main_dir(peda_root)
+        matlab_log_path = case_dir / "PEDA_run_log.txt"
+        batch_cmd = build_matlab_batch_cmd(peda_main_dir, case_dir)
+        log.info("MATLAB exe resolved: %s", matlab_exe_path)
+        log.info("PEDA main dir resolved: %s", peda_main_dir)
+        run_matlab_batch(
+            matlab_exe=matlab_exe_path,
+            log_path=matlab_log_path,
+            batch_cmd=batch_cmd,
+            logger=log,
         )
+        if not peda_out_dir.exists():
+            raise ProcessingError(
+                f"PEDA output directory was not created by MATLAB: {peda_out_dir}"
+            )
     else:
         raise ValueError(f"Unsupported PEDA mode: {mode}")
 
-    case_dir.mkdir(parents=True, exist_ok=True)
     video_dir = case_dir / video_dir_name
     if video_dir.exists():
         shutil.rmtree(video_dir, ignore_errors=True)
@@ -120,10 +149,13 @@ def run_peda_step(
     _cleanup_sqlite_sidecars(case_dir)
 
     return {
-        "status": "stub" if mode == "stub" else "unknown",
+        "status": "stub" if mode == "stub" else "matlab",
         "peda_out_dir": str(peda_out_dir),
         "video_dir": str(video_dir),
         "data_zip_path": str(data_zip_path),
         "mat_removed_count": mat_removed_count,
-        "stub_log_path": str(stub_log_path),
+        "stub_log_path": str(stub_log_path) if stub_log_path else None,
+        "matlab_log_path": str(matlab_log_path) if matlab_log_path else None,
+        "matlab_exe": str(matlab_exe_path) if matlab_exe_path else None,
+        "peda_main_dir": str(peda_main_dir) if peda_main_dir else None,
     }

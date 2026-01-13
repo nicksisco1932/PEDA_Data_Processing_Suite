@@ -154,6 +154,12 @@ def parse_and_resolve_config(
     parser.add_argument("--localdb-path", help="Explicit local.db path for checks")
     parser.add_argument("--peda-version", help="PEDA version string (e.g., v9.1.3)")
     parser.add_argument("--peda-mode", help="PEDA mode (stub or matlab)")
+    parser.add_argument("--peda-matlab-exe", help="Path to matlab.exe")
+    parser.add_argument("--peda-root", help="Root directory for PEDA install")
+    parser.add_argument(
+        "--peda-input-dir-mode",
+        help="PEDA input dir mode (currently only case_root)",
+    )
     parser.add_argument(
         "--self-test", action="store_true", help="Run built-in self-test and exit"
     )
@@ -208,6 +214,9 @@ def parse_and_resolve_config(
         "peda_enabled": args.peda_enabled,
         "peda_version": args.peda_version,
         "peda_mode": args.peda_mode,
+        "peda_matlab_exe": args.peda_matlab_exe,
+        "peda_root": args.peda_root,
+        "peda_input_dir_mode": args.peda_input_dir_mode,
     }
 
     cfg, run_id = resolve_config(
@@ -576,6 +585,11 @@ def run_pipeline(
                     peda_version=pipeline_cfg.get("peda", {}).get("version", "v9.1.3"),
                     enabled=True,
                     mode=pipeline_cfg.get("peda", {}).get("mode", "stub"),
+                    matlab_exe=pipeline_cfg.get("peda", {}).get("matlab_exe"),
+                    peda_root=pipeline_cfg.get("peda", {}).get("peda_root"),
+                    input_dir_mode=pipeline_cfg.get("peda", {}).get(
+                        "input_dir_mode", "case_root"
+                    ),
                 )
                 artifacts["outputs"]["peda"] = peda_summary
         else:
@@ -823,6 +837,9 @@ def main() -> int:
             "enabled": cfg.get("peda_enabled"),
             "version": cfg.get("peda_version"),
             "mode": cfg.get("peda_mode"),
+            "matlab_exe": cfg.get("peda_matlab_exe"),
+            "peda_root": cfg.get("peda_root"),
+            "input_dir_mode": cfg.get("peda_input_dir_mode"),
         },
         "localdb": {
             "enabled": cfg.get("localdb_enabled"),

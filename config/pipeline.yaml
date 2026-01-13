@@ -76,9 +76,12 @@ pipeline:
     enabled: false
     mode: "stub"
   peda:
-    enabled: false
+    enabled: true
     version: "v9.1.3"
-    mode: "stub"
+    mode: "matlab"
+    matlab_exe: null
+    peda_root: "C:\\PEDA Apps\\PEDA_v9.1.3"
+    input_dir_mode: "case_root"
 
 logging:
   dir: "{case_dir}\\run_logs"

@@ -29,6 +29,8 @@ PATH_KEYS = {
     "misc_dir",
     "manifest_dir",
     "localdb_path",
+    "peda_matlab_exe",
+    "peda_root",
 }
 
 DEFAULTS: Dict[str, Any] = {
@@ -70,6 +72,9 @@ DEFAULTS: Dict[str, Any] = {
     "peda_enabled": False,
     "peda_version": "v9.1.3",
     "peda_mode": "stub",
+    "peda_matlab_exe": None,
+    "peda_root": None,
+    "peda_input_dir_mode": "case_root",
 }
 
 CANONICAL_LAYOUT = {
@@ -351,6 +356,16 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "peda_mode": peda_block.get(
             "mode", cfg.get("peda_mode", DEFAULTS["peda_mode"])
         ),
+        "peda_matlab_exe": peda_block.get(
+            "matlab_exe", cfg.get("peda_matlab_exe", DEFAULTS["peda_matlab_exe"])
+        ),
+        "peda_root": peda_block.get(
+            "peda_root", cfg.get("peda_root", DEFAULTS["peda_root"])
+        ),
+        "peda_input_dir_mode": peda_block.get(
+            "input_dir_mode",
+            cfg.get("peda_input_dir_mode", DEFAULTS["peda_input_dir_mode"]),
+        ),
         "log_level": logging_block.get(
             "level_console", cfg.get("log_level", DEFAULTS["log_level"])
         ),
@@ -616,6 +631,20 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         raise ValidationError("peda_mode must be a string")
     if cfg.get("peda_mode") not in ("stub", "matlab"):
         raise ValidationError("peda_mode must be 'stub' or 'matlab'")
+    if cfg.get("peda_input_dir_mode") is None or not isinstance(
+        cfg.get("peda_input_dir_mode"), str
+    ):
+        raise ValidationError("peda_input_dir_mode must be a string")
+    if cfg.get("peda_input_dir_mode") not in ("case_root",):
+        raise ValidationError("peda_input_dir_mode must be 'case_root'")
+    if cfg.get("peda_matlab_exe") is not None and not isinstance(
+        cfg.get("peda_matlab_exe"), (str, Path)
+    ):
+        raise ValidationError("peda_matlab_exe must be a string or null")
+    if cfg.get("peda_root") is not None and not isinstance(
+        cfg.get("peda_root"), (str, Path)
+    ):
+        raise ValidationError("peda_root must be a string or null")
     if cfg.get("log_level") is None:
         raise ValidationError("log_level must be set")
     policy = cfg.get("scratch_policy", DEFAULTS["scratch_policy"])

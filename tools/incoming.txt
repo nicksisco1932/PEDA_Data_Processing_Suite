@@ -1,7 +1,7 @@
 # Inputs
-case_dir: B:\scratch\093_01-098
-case_num: 093_01-098
-out_root: B:\temp_work_delete
-mri_path: B:\temp_work_delete\093_01-098\MR_093-01_098.zip
-tdc_path: B:\temp_work_delete\093_01-098\TDC_093-01_098.zip
-pdf_path: B:\temp_work_delete\093_01-098\TreatmentReport_093-01_098.pdf
+case_dir: C:\Users\nsisco\Documents\PEDA\Toronto_proc\005_01-083
+case_num: 005_01-083
+out_root: C:\Users\nsisco\Documents\PEDA\Toronto_proc\
+mri_path: C:\Users\nsisco\Documents\PEDA\Toronto_proc\005_01-083\00501083_00501083_20251212.zip
+tdc_path: C:\Users\nsisco\Documents\PEDA\Toronto_proc\005_01-083\005_01-083_TDC.zip
+pdf_path: C:\Users\nsisco\Documents\PEDA\Toronto_proc\005_01-083\005_01-083 TreatmentReport.pdf
