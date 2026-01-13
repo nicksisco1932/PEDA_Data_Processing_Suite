@@ -55,6 +55,12 @@ run:
     date_shift_days: 137
   hash_outputs: false             # If true, record fingerprints of final outputs in the manifest
 
+localdb:
+  enabled: true
+  check_only: false
+  strict: true
+  path: null
+
 logging:
   dir: "{case_dir}\\Misc\\Logs"
   level_console: "INFO"           # Console verbosity

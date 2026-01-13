@@ -41,6 +41,7 @@ def test_test_mode_produces_schema(tmp_path: Path) -> None:
         "--test-mode",
         "--run-id",
         "TEST_RUN",
+        "--no-localdb-enabled",
     )
     assert proc.returncode == 0, f"controller failed:\n{proc.stdout}\n{proc.stderr}"
 
@@ -78,6 +79,7 @@ def test_no_prefixed_dirs_created(tmp_path: Path) -> None:
         "--test-mode",
         "--run-id",
         "TEST_RUN",
+        "--no-localdb-enabled",
     )
     assert proc.returncode == 0, f"controller failed:\n{proc.stdout}\n{proc.stderr}"
 

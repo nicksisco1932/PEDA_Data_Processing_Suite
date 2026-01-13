@@ -802,3 +802,427 @@
 2026-01-08 19:22:26,800 INFO pipeline C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-4\test_no_unprefixed_dirs_create0\TEST_CASE\TEST_CASE MR DICOM
 2026-01-08 19:22:26,801 INFO pipeline C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-4\test_no_unprefixed_dirs_create0\TEST_CASE\TEST_CASE TDC Sessions
 2026-01-08 19:22:26,801 INFO pipeline C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-4\test_no_unprefixed_dirs_create0\TEST_CASE\TEST_CASE Misc
+2026-01-13 09:14:34,899 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:34,901 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:34,901 INFO pipeline Test mode: True
+2026-01-13 09:14:34,901 INFO pipeline Allow workspace zips: False
+2026-01-13 09:14:34,903 INFO pipeline Legacy filename rules: False
+2026-01-13 09:14:34,903 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:34,903 INFO pipeline START Controller validations
+2026-01-13 09:14:34,912 INFO pipeline PASS  Controller validations (0.02s)
+2026-01-13 09:14:34,912 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:14:34,912 INFO pipeline START MRI
+2026-01-13 09:14:34,912 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:14:34,924 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:14:34,924 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:14:34,995 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:34,996 INFO pipeline PASS  MRI (0.08s)
+2026-01-13 09:14:34,996 INFO pipeline START TDC
+2026-01-13 09:14:34,996 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:35,005 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:14:35,007 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:14:35,065 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zc9pmwie
+2026-01-13 09:14:35,067 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zc9pmwie\TDC Sessions
+2026-01-13 09:14:35,067 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:14:35,069 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:14:35,069 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:14:35,081 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:14:35,090 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:14:35,093 INFO pipeline START local.db anonymization
+2026-01-13 09:14:35,097 INFO pipeline PASS  local.db anonymization (0.00s)
+2026-01-13 09:14:35,097 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:14:35,124 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:35,125 INFO pipeline PASS  TDC (0.12s)
+2026-01-13 09:14:35,125 INFO pipeline START Treatment report
+2026-01-13 09:14:35,125 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:14:35,125 INFO pipeline START structure_guard
+2026-01-13 09:14:35,149 INFO pipeline PASS  structure_guard (0.03s)
+2026-01-13 09:14:35,149 INFO pipeline START Finalization
+2026-01-13 09:14:35,149 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:14:35,580 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:14:35,580 INFO pipeline Artifacts:
+2026-01-13 09:14:35,580 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:35,580 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:35,580 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:14:35,580 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:14:35,895 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:35,895 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:35,895 INFO pipeline Test mode: True
+2026-01-13 09:14:35,895 INFO pipeline Allow workspace zips: False
+2026-01-13 09:14:35,895 INFO pipeline Legacy filename rules: False
+2026-01-13 09:14:35,895 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:35,895 INFO pipeline START Controller validations
+2026-01-13 09:14:35,907 INFO pipeline PASS  Controller validations (0.02s)
+2026-01-13 09:14:35,907 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:14:35,907 INFO pipeline START MRI
+2026-01-13 09:14:35,907 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:14:35,916 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:14:35,916 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:14:35,962 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:35,962 INFO pipeline PASS  MRI (0.06s)
+2026-01-13 09:14:35,962 INFO pipeline START TDC
+2026-01-13 09:14:35,962 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:35,968 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:14:35,968 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:14:36,026 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_4nwf5o4_
+2026-01-13 09:14:36,028 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_4nwf5o4_\TDC Sessions
+2026-01-13 09:14:36,028 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:14:36,030 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:14:36,030 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:14:36,040 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:14:36,045 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:14:36,047 INFO pipeline START local.db anonymization
+2026-01-13 09:14:36,058 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:14:36,058 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:14:36,078 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:36,078 INFO pipeline PASS  TDC (0.11s)
+2026-01-13 09:14:36,078 INFO pipeline START Treatment report
+2026-01-13 09:14:36,078 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:14:36,078 INFO pipeline START structure_guard
+2026-01-13 09:14:36,078 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 09:14:36,078 INFO pipeline START Finalization
+2026-01-13 09:14:36,078 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:14:36,266 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:14:36,266 INFO pipeline Artifacts:
+2026-01-13 09:14:36,266 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:36,271 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-2\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:36,271 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:14:36,271 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:14:44,944 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:44,944 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:44,945 INFO pipeline Test mode: True
+2026-01-13 09:14:44,945 INFO pipeline Allow workspace zips: False
+2026-01-13 09:14:44,945 INFO pipeline Legacy filename rules: False
+2026-01-13 09:14:44,945 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:44,945 INFO pipeline START Controller validations
+2026-01-13 09:14:44,947 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 09:14:44,947 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:14:44,947 INFO pipeline START MRI
+2026-01-13 09:14:44,947 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:14:44,962 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:14:44,962 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:14:45,015 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:45,015 INFO pipeline PASS  MRI (0.06s)
+2026-01-13 09:14:45,015 INFO pipeline START TDC
+2026-01-13 09:14:45,015 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:45,017 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:14:45,017 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:14:45,077 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_7mb1yab4
+2026-01-13 09:14:45,079 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_7mb1yab4\TDC Sessions
+2026-01-13 09:14:45,079 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:14:45,081 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:14:45,081 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:14:45,094 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:14:45,096 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:14:45,096 INFO pipeline START local.db anonymization
+2026-01-13 09:14:45,112 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:14:45,114 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:14:45,132 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:45,132 INFO pipeline PASS  TDC (0.12s)
+2026-01-13 09:14:45,132 INFO pipeline START Treatment report
+2026-01-13 09:14:45,132 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:14:45,132 INFO pipeline START structure_guard
+2026-01-13 09:14:45,132 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 09:14:45,132 INFO pipeline START Finalization
+2026-01-13 09:14:45,132 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:14:45,313 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:14:45,313 INFO pipeline Artifacts:
+2026-01-13 09:14:45,313 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:45,313 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:45,313 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:14:45,313 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:14:45,663 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:45,663 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:14:45,663 INFO pipeline Test mode: True
+2026-01-13 09:14:45,663 INFO pipeline Allow workspace zips: False
+2026-01-13 09:14:45,663 INFO pipeline Legacy filename rules: False
+2026-01-13 09:14:45,663 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:45,663 INFO pipeline START Controller validations
+2026-01-13 09:14:45,676 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 09:14:45,677 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:14:45,677 INFO pipeline START MRI
+2026-01-13 09:14:45,677 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:14:45,680 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:14:45,680 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:14:45,748 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:45,749 INFO pipeline PASS  MRI (0.06s)
+2026-01-13 09:14:45,749 INFO pipeline START TDC
+2026-01-13 09:14:45,749 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:14:45,759 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:14:45,759 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:14:45,810 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_38diee8f
+2026-01-13 09:14:45,811 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_38diee8f\TDC Sessions
+2026-01-13 09:14:45,813 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:14:45,814 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:14:45,816 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:14:45,831 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:14:45,838 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:14:45,841 INFO pipeline START local.db anonymization
+2026-01-13 09:14:45,859 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:14:45,860 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:14:45,882 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:45,882 INFO pipeline PASS  TDC (0.14s)
+2026-01-13 09:14:45,882 INFO pipeline START Treatment report
+2026-01-13 09:14:45,882 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:14:45,882 INFO pipeline START structure_guard
+2026-01-13 09:14:45,882 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 09:14:45,882 INFO pipeline START Finalization
+2026-01-13 09:14:45,882 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:14:46,047 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:14:46,047 INFO pipeline Artifacts:
+2026-01-13 09:14:46,047 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:14:46,047 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-3\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:14:46,047 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:14:46,047 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:23:06,429 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:23:06,430 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:23:06,430 INFO pipeline Test mode: True
+2026-01-13 09:23:06,432 INFO pipeline Allow workspace zips: False
+2026-01-13 09:23:06,432 INFO pipeline Legacy filename rules: False
+2026-01-13 09:23:06,432 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:23:06,433 INFO pipeline START Controller validations
+2026-01-13 09:23:06,442 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 09:23:06,443 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:23:06,443 INFO pipeline START MRI
+2026-01-13 09:23:06,443 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:23:06,453 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:23:06,453 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:23:06,520 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:23:06,521 INFO pipeline PASS  MRI (0.08s)
+2026-01-13 09:23:06,521 INFO pipeline START TDC
+2026-01-13 09:23:06,522 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:23:06,530 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:23:06,530 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:23:06,591 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_1m404zi1
+2026-01-13 09:23:06,592 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_1m404zi1\TDC Sessions
+2026-01-13 09:23:06,592 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:23:06,592 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:23:06,593 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:23:06,606 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:23:06,612 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:23:06,614 INFO pipeline START local.db anonymization
+2026-01-13 09:23:06,626 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:23:06,626 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:23:06,648 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:23:06,648 INFO pipeline PASS  TDC (0.12s)
+2026-01-13 09:23:06,652 INFO pipeline START localdb
+2026-01-13 09:23:07,240 ERROR pipeline FAIL  localdb (0.59s) localdb anonymization failed: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION\local.db
+2026-01-13 09:23:07,240 ERROR pipeline Processing error: localdb anonymization failed: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION\local.db
+2026-01-13 09:23:07,498 INFO pipeline Run complete: FAILED
+2026-01-13 09:23:07,499 INFO pipeline Artifacts:
+2026-01-13 09:23:07,499 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:23:07,499 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:23:07,499 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:23:07,499 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:23:07,892 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:23:07,892 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:23:07,892 INFO pipeline Test mode: True
+2026-01-13 09:23:07,893 INFO pipeline Allow workspace zips: False
+2026-01-13 09:23:07,893 INFO pipeline Legacy filename rules: False
+2026-01-13 09:23:07,893 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:23:07,893 INFO pipeline START Controller validations
+2026-01-13 09:23:07,908 INFO pipeline PASS  Controller validations (0.02s)
+2026-01-13 09:23:07,910 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:23:07,910 INFO pipeline START MRI
+2026-01-13 09:23:07,910 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:23:07,922 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:23:07,923 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:23:07,980 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:23:07,981 INFO pipeline PASS  MRI (0.08s)
+2026-01-13 09:23:07,981 INFO pipeline START TDC
+2026-01-13 09:23:07,982 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:23:07,990 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:23:07,991 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:23:08,056 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_53wyi6s3
+2026-01-13 09:23:08,057 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_53wyi6s3\TDC Sessions
+2026-01-13 09:23:08,058 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:23:08,058 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:23:08,059 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:23:08,073 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:23:08,080 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:23:08,083 INFO pipeline START local.db anonymization
+2026-01-13 09:23:08,098 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:23:08,099 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:23:08,123 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:23:08,124 INFO pipeline PASS  TDC (0.14s)
+2026-01-13 09:23:08,130 INFO pipeline START localdb
+2026-01-13 09:23:08,657 ERROR pipeline FAIL  localdb (0.52s) localdb anonymization failed: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION\local.db
+2026-01-13 09:23:08,657 ERROR pipeline Processing error: localdb anonymization failed: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION\local.db
+2026-01-13 09:23:08,834 INFO pipeline Run complete: FAILED
+2026-01-13 09:23:08,834 INFO pipeline Artifacts:
+2026-01-13 09:23:08,834 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:23:08,834 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-4\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:23:08,834 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:23:08,834 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:24:23,294 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:23,295 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:23,295 INFO pipeline Test mode: True
+2026-01-13 09:24:23,295 INFO pipeline Allow workspace zips: False
+2026-01-13 09:24:23,296 INFO pipeline Legacy filename rules: False
+2026-01-13 09:24:23,296 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:23,296 INFO pipeline START Controller validations
+2026-01-13 09:24:23,305 INFO pipeline PASS  Controller validations (0.02s)
+2026-01-13 09:24:23,305 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:24:23,305 INFO pipeline START MRI
+2026-01-13 09:24:23,305 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:24:23,314 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:24:23,314 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:24:23,382 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:23,384 INFO pipeline PASS  MRI (0.08s)
+2026-01-13 09:24:23,384 INFO pipeline START TDC
+2026-01-13 09:24:23,384 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:23,392 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:24:23,392 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:24:23,443 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zaj7k4rm
+2026-01-13 09:24:23,444 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zaj7k4rm\TDC Sessions
+2026-01-13 09:24:23,445 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:24:23,445 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:24:23,446 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:24:23,457 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:24:23,463 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:24:23,464 INFO pipeline START local.db anonymization
+2026-01-13 09:24:23,477 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:24:23,477 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:24:23,496 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:23,496 INFO pipeline PASS  TDC (0.11s)
+2026-01-13 09:24:23,496 INFO pipeline START Treatment report
+2026-01-13 09:24:23,497 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:24:23,497 INFO pipeline START structure_guard
+2026-01-13 09:24:23,501 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 09:24:23,501 INFO pipeline START Finalization
+2026-01-13 09:24:23,501 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:24:23,714 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:24:23,714 INFO pipeline Artifacts:
+2026-01-13 09:24:23,714 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:23,714 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:23,714 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:24:23,714 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:24:24,013 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:24,013 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:24,013 INFO pipeline Test mode: True
+2026-01-13 09:24:24,013 INFO pipeline Allow workspace zips: False
+2026-01-13 09:24:24,013 INFO pipeline Legacy filename rules: False
+2026-01-13 09:24:24,013 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:24,013 INFO pipeline START Controller validations
+2026-01-13 09:24:24,072 INFO pipeline PASS  Controller validations (0.06s)
+2026-01-13 09:24:24,072 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:24:24,072 INFO pipeline START MRI
+2026-01-13 09:24:24,072 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:24:24,079 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:24:24,079 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:24:24,127 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:24,127 INFO pipeline PASS  MRI (0.05s)
+2026-01-13 09:24:24,127 INFO pipeline START TDC
+2026-01-13 09:24:24,128 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:24,133 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:24:24,133 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:24:24,178 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_lx1aa6dc
+2026-01-13 09:24:24,179 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_lx1aa6dc\TDC Sessions
+2026-01-13 09:24:24,180 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:24:24,180 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:24:24,181 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:24:24,193 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:24:24,196 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:24:24,196 INFO pipeline START local.db anonymization
+2026-01-13 09:24:24,217 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:24:24,217 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:24:24,240 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:24,241 INFO pipeline PASS  TDC (0.11s)
+2026-01-13 09:24:24,242 INFO pipeline START Treatment report
+2026-01-13 09:24:24,242 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:24:24,242 INFO pipeline START structure_guard
+2026-01-13 09:24:24,246 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 09:24:24,248 INFO pipeline START Finalization
+2026-01-13 09:24:24,248 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:24:24,411 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:24:24,411 INFO pipeline Artifacts:
+2026-01-13 09:24:24,411 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:24,411 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-5\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:24,411 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:24:24,411 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:24:52,841 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:52,841 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:52,842 INFO pipeline Test mode: True
+2026-01-13 09:24:52,842 INFO pipeline Allow workspace zips: False
+2026-01-13 09:24:52,842 INFO pipeline Legacy filename rules: False
+2026-01-13 09:24:52,842 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:52,843 INFO pipeline START Controller validations
+2026-01-13 09:24:52,849 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 09:24:52,849 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:24:52,850 INFO pipeline START MRI
+2026-01-13 09:24:52,850 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:24:52,862 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:24:52,862 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:24:52,921 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:52,921 INFO pipeline PASS  MRI (0.08s)
+2026-01-13 09:24:52,921 INFO pipeline START TDC
+2026-01-13 09:24:52,921 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:52,930 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:24:52,930 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:24:52,988 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_qwep_z16
+2026-01-13 09:24:52,988 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_qwep_z16\TDC Sessions
+2026-01-13 09:24:52,991 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:24:52,992 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:24:52,994 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:24:53,006 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:24:53,015 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:24:53,015 INFO pipeline START local.db anonymization
+2026-01-13 09:24:53,031 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:24:53,031 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:24:53,053 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:53,054 INFO pipeline PASS  TDC (0.12s)
+2026-01-13 09:24:53,054 INFO pipeline START Treatment report
+2026-01-13 09:24:53,054 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:24:53,054 INFO pipeline START structure_guard
+2026-01-13 09:24:53,064 INFO pipeline PASS  structure_guard (0.02s)
+2026-01-13 09:24:53,065 INFO pipeline START Finalization
+2026-01-13 09:24:53,065 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:24:53,297 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:24:53,297 INFO pipeline Artifacts:
+2026-01-13 09:24:53,297 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:53,298 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:53,298 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:24:53,298 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 09:24:53,700 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:53,700 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 09:24:53,700 INFO pipeline Test mode: True
+2026-01-13 09:24:53,700 INFO pipeline Allow workspace zips: False
+2026-01-13 09:24:53,700 INFO pipeline Legacy filename rules: False
+2026-01-13 09:24:53,701 INFO pipeline Resolved inputs: mri=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:53,701 INFO pipeline START Controller validations
+2026-01-13 09:24:53,711 INFO pipeline PASS  Controller validations (0.02s)
+2026-01-13 09:24:53,711 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 09:24:53,711 INFO pipeline START MRI
+2026-01-13 09:24:53,711 INFO pipeline MRI input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 09:24:53,720 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e)
+2026-01-13 09:24:53,720 INFO pipeline MRI backup verified: attempts=1 src_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e dst_sha256=633d51c3888a7c0ad3a00b65d0e77bac74ee51d173bdc47e0cbe8aea744a075e
+2026-01-13 09:24:53,786 INFO pipeline MRI extracted to final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:53,786 INFO pipeline PASS  MRI (0.06s)
+2026-01-13 09:24:53,788 INFO pipeline START TDC
+2026-01-13 09:24:53,788 INFO pipeline TDC input: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 09:24:53,798 INFO pipeline Copy verified: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8)
+2026-01-13 09:24:53,798 INFO pipeline TDC backup verified: attempts=1 src_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8 dst_sha256=e3781d40081afaf404536d5ff5a6886429e213d78977b623040f676207e287d8
+2026-01-13 09:24:53,855 INFO pipeline TDC extracted: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_ac78dnws
+2026-01-13 09:24:53,855 INFO pipeline Resolved TDC root: C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_ac78dnws\TDC Sessions
+2026-01-13 09:24:53,858 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 09:24:53,860 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 09:24:53,861 INFO pipeline Session: _TEST_SESSION
+2026-01-13 09:24:53,873 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 09:24:53,882 INFO pipeline Copied dir -> C:\Users\NICHOL~1\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 09:24:53,884 INFO pipeline START local.db anonymization
+2026-01-13 09:24:53,898 INFO pipeline PASS  local.db anonymization (0.02s)
+2026-01-13 09:24:53,898 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 09:24:53,921 INFO pipeline TDC final: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:53,921 INFO pipeline PASS  TDC (0.14s)
+2026-01-13 09:24:53,921 INFO pipeline START Treatment report
+2026-01-13 09:24:53,921 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 09:24:53,921 INFO pipeline START structure_guard
+2026-01-13 09:24:53,928 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 09:24:53,928 INFO pipeline START Finalization
+2026-01-13 09:24:53,928 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 09:24:54,123 INFO pipeline Run complete: SUCCESS
+2026-01-13 09:24:54,123 INFO pipeline Artifacts:
+2026-01-13 09:24:54,126 INFO pipeline  - MRI final dir: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 09:24:54,126 INFO pipeline  - TDC final session: C:\Users\NicholasSisco\AppData\Local\Temp\pytest-of-NicholasSisco\pytest-6\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 09:24:54,126 INFO pipeline  - Log file: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 09:24:54,126 INFO pipeline  - Manifest: C:\Users\NicholasSisco\OneDrive - Profound Medical\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json

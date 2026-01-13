@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 import MRI_proc
 import TDC_proc
+from src.pipeline_steps.localdb_step import run_localdb_step
 from src.logutil import (
     init_logger,
     StatusManager,
@@ -136,6 +137,7 @@ def parse_and_resolve_config(
     parser.add_argument(
         "--date-shift-days", type=int, help="TDC date shift (anonymization)"
     )
+    parser.add_argument("--localdb-path", help="Explicit local.db path override")
     parser.add_argument(
         "--self-test", action="store_true", help="Run built-in self-test and exit"
     )
@@ -149,6 +151,9 @@ def parse_and_resolve_config(
     add_bool_arg(
         parser, "allow_workspace_zips", "Allow zip archives under TDC workspace"
     )
+    add_bool_arg(parser, "localdb_enabled", "Enable local.db check/anonymization")
+    add_bool_arg(parser, "localdb_check_only", "Only run local.db checker (no anonymization)")
+    add_bool_arg(parser, "localdb_strict", "Fail pipeline on local.db findings")
     add_bool_arg(
         parser,
         "legacy_filename_rules",
@@ -178,6 +183,10 @@ def parse_and_resolve_config(
         "hash_outputs": args.hash_outputs,
         "test_mode": args.test_mode,
         "allow_workspace_zips": args.allow_workspace_zips,
+        "localdb_enabled": args.localdb_enabled,
+        "localdb_check_only": args.localdb_check_only,
+        "localdb_strict": args.localdb_strict,
+        "localdb_path": args.localdb_path,
         "legacy_filename_rules": args.legacy_filename_rules,
     }
 
@@ -334,6 +343,7 @@ def run_pipeline(
     pdf_input_path: Optional[Path],
     artifacts: Dict[str, Any],
     policy: RunPolicy,
+    localdb_cfg: Dict[str, Any],
 ) -> None:
     logger.info("Run plan ready (dry_run=%s).", policy.dry_run)
 
@@ -396,6 +406,66 @@ def run_pipeline(
                 "duration_s": 0.0,
                 "error": "skip_tdc",
             }
+
+    if not policy.dry_run and localdb_cfg.get("enabled", True):
+        localdb_path = localdb_cfg.get("path")
+        session_root = None
+        if "tdc" in artifacts.get("outputs", {}):
+            session_root = artifacts["outputs"]["tdc"].get("final_session")
+        if localdb_path:
+            db_path = Path(localdb_path)
+            if not db_path.exists():
+                raise ValidationError(f"localdb.path not found: {db_path}")
+        else:
+            search_root = Path(session_root) if session_root else run_ctx["tdc_dir"]
+            candidates = [p for p in search_root.rglob("local.db") if p.is_file()]
+            if len(candidates) > 1:
+                candidates.sort(key=lambda p: str(p).lower())
+                raise ValidationError(
+                    "Multiple local.db files found: " + ", ".join(str(p) for p in candidates)
+                )
+            if not candidates:
+                logger.info("localdb: no local.db found; skipping.")
+                step_results["localdb"] = {
+                    "status": "SKIP",
+                    "duration_s": 0.0,
+                    "error": "local.db not found",
+                }
+                db_path = None
+            else:
+                db_path = candidates[0]
+
+        if db_path:
+            out_dir = run_ctx["tdc_dir"] / "applog" / "Logs"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            with StepTimer(
+                logger=logger,
+                step_name="localdb",
+                results=step_results,
+                status_mgr=status_mgr,
+            ):
+                summary = run_localdb_step(
+                    db_path=db_path,
+                    case_id=run_ctx["case"],
+                    out_dir=out_dir,
+                    enable_anon=(not localdb_cfg.get("check_only", False)),
+                    check_only=bool(localdb_cfg.get("check_only", False)),
+                    strict=bool(localdb_cfg.get("strict", True)),
+                )
+                step_results["localdb"] = summary
+                logger.info(
+                    "localdb: pre_fail=%s pre_exit=%s -> anon_applied=%s -> post_fail=%s post_exit=%s",
+                    summary.get("pre", {}).get("fails"),
+                    summary.get("pre", {}).get("exit_code"),
+                    summary.get("anon_applied"),
+                    summary.get("post", {}).get("fails"),
+                    summary.get("post", {}).get("exit_code"),
+                )
+    else:
+        step_results.setdefault(
+            "localdb",
+            {"status": "SKIP", "duration_s": 0.0, "error": "disabled or dry-run"},
+        )
 
     with StepTimer(
         logger=logger,
@@ -655,6 +725,12 @@ def main() -> int:
             pdf_input_path=pdf_input_path,
             artifacts=artifacts,
             policy=policy,
+            localdb_cfg={
+                "enabled": cfg.get("localdb_enabled", True),
+                "check_only": cfg.get("localdb_check_only", False),
+                "strict": cfg.get("localdb_strict", True),
+                "path": cfg.get("localdb_path"),
+            },
         )
 
         status = "SUCCESS"

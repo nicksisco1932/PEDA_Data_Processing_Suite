@@ -28,6 +28,7 @@ PATH_KEYS = {
     "tdc_dir",
     "misc_dir",
     "manifest_dir",
+    "localdb_path",
 }
 
 DEFAULTS: Dict[str, Any] = {
@@ -50,6 +51,10 @@ DEFAULTS: Dict[str, Any] = {
     "test_mode": False,
     "allow_workspace_zips": False,
     "legacy_filename_rules": False,
+    "localdb_enabled": True,
+    "localdb_check_only": False,
+    "localdb_strict": True,
+    "localdb_path": None,
 }
 
 CANONICAL_LAYOUT = {
@@ -167,6 +172,7 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     inputs_block = cfg.get("inputs", {})
     run_block = cfg.get("run", {})
     logging_block = cfg.get("logging", {})
+    localdb_block = cfg.get("localdb", {}) if isinstance(cfg.get("localdb"), dict) else {}
     metadata_block = cfg.get("metadata", {})
 
     case_id = case_block.get("id")
@@ -239,6 +245,10 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(scratch_val, str):
         scratch_val = _sanitize_path_value(scratch_val, "scratch", raw_paths)
 
+    localdb_path = localdb_block.get("path", cfg.get("localdb_path"))
+    if isinstance(localdb_path, str):
+        localdb_path = _sanitize_path_value(localdb_path, "localdb_path", raw_paths)
+
     flat = {
         **cfg,
         "root": root or cfg.get("root"),
@@ -282,6 +292,16 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "hash_outputs": run_block.get(
             "hash_outputs", cfg.get("hash_outputs", DEFAULTS["hash_outputs"])
         ),
+        "localdb_enabled": localdb_block.get(
+            "enabled", cfg.get("localdb_enabled", DEFAULTS["localdb_enabled"])
+        ),
+        "localdb_check_only": localdb_block.get(
+            "check_only", cfg.get("localdb_check_only", DEFAULTS["localdb_check_only"])
+        ),
+        "localdb_strict": localdb_block.get(
+            "strict", cfg.get("localdb_strict", DEFAULTS["localdb_strict"])
+        ),
+        "localdb_path": localdb_path,
         "log_level": logging_block.get(
             "level_console", cfg.get("log_level", DEFAULTS["log_level"])
         ),
@@ -523,6 +543,9 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         "test_mode",
         "allow_workspace_zips",
         "legacy_filename_rules",
+        "localdb_enabled",
+        "localdb_check_only",
+        "localdb_strict",
     ):
         val = cfg.get(key)
         if not isinstance(val, bool):
