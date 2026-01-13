@@ -61,6 +61,25 @@ localdb:
   strict: true
   path: null
 
+pipeline:
+  unzip_inputs: false
+  cleanup:
+    enabled: true
+    dry_run: false
+    patterns:
+      - "*.mat"
+      - "local.db-wal"
+      - "local.db-shm"
+      - "*.db-wal"
+      - "*.db-shm"
+  dicom_anon:
+    enabled: false
+    mode: "stub"
+  peda:
+    enabled: false
+    version: "v9.1.3"
+    mode: "stub"
+
 logging:
   dir: "{case_dir}\\Misc\\Logs"
   level_console: "INFO"           # Console verbosity

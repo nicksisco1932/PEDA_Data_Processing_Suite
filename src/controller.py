@@ -17,6 +17,12 @@ if str(ROOT) not in sys.path:
 import MRI_proc
 import TDC_proc
 from src.pipeline_steps.applog_step import install_tdc_log
+from src.pipeline_steps.cleanup_artifacts import cleanup_artifacts
+from src.pipeline_steps.dicom_anon_stub import run_dicom_anon_stub
+from src.pipeline_steps.localdb_step import run_localdb_step
+from src.pipeline_steps.peda_step import run_peda_step
+from src.pipeline_steps.unzip_inputs import expand_archives
+from src.phi.dicom_rules import build_dicom_rules
 from src.logutil import (
     init_logger,
     StatusManager,
@@ -137,6 +143,9 @@ def parse_and_resolve_config(
     parser.add_argument(
         "--date-shift-days", type=int, help="TDC date shift (anonymization)"
     )
+    parser.add_argument("--localdb-path", help="Explicit local.db path for checks")
+    parser.add_argument("--peda-version", help="PEDA version string (e.g., v9.1.3)")
+    parser.add_argument("--peda-mode", help="PEDA mode (stub or matlab)")
     parser.add_argument(
         "--self-test", action="store_true", help="Run built-in self-test and exit"
     )
@@ -155,6 +164,10 @@ def parse_and_resolve_config(
         "legacy_filename_rules",
         "Enable legacy filename-based auto discovery and output naming",
     )
+    add_bool_arg(parser, "localdb_enabled", "Enable local.db check/anonymization step")
+    add_bool_arg(parser, "localdb_check_only", "Check local.db without anonymization")
+    add_bool_arg(parser, "localdb_strict", "Fail pipeline on local.db findings")
+    add_bool_arg(parser, "peda_enabled", "Enable PEDA step (stub by default)")
     args = parser.parse_args(argv)
 
     if args.self_test:
@@ -180,6 +193,13 @@ def parse_and_resolve_config(
         "test_mode": args.test_mode,
         "allow_workspace_zips": args.allow_workspace_zips,
         "legacy_filename_rules": args.legacy_filename_rules,
+        "localdb_enabled": args.localdb_enabled,
+        "localdb_check_only": args.localdb_check_only,
+        "localdb_strict": args.localdb_strict,
+        "localdb_path": args.localdb_path,
+        "peda_enabled": args.peda_enabled,
+        "peda_version": args.peda_version,
+        "peda_mode": args.peda_mode,
     }
 
     cfg, run_id = resolve_config(
@@ -335,13 +355,48 @@ def run_pipeline(
     pdf_input_path: Optional[Path],
     artifacts: Dict[str, Any],
     policy: RunPolicy,
+    pipeline_cfg: Dict[str, Any],
 ) -> None:
     logger.info("Run plan ready (dry_run=%s).", policy.dry_run)
+
+    def _record_skip(step_name: str, reason: str) -> None:
+        step_results[step_name] = {
+            "status": "SKIP",
+            "duration_s": 0.0,
+            "error": reason,
+        }
 
     if policy.dry_run:
         step_results["MRI"] = {"status": "SKIP", "duration_s": 0.0, "error": "dry-run"}
         step_results["TDC"] = {"status": "SKIP", "duration_s": 0.0, "error": "dry-run"}
+        _record_skip("Unzip inputs", "dry-run")
+        _record_skip("DICOM anonymization", "dry-run")
+        _record_skip("local.db check", "dry-run")
+        _record_skip("TDC applog", "dry-run")
+        _record_skip("Cleanup artifacts", "dry-run")
+        _record_skip("PEDA step", "dry-run")
     else:
+        mri_artifacts: Dict[str, Any] | None = None
+        tdc_artifacts: Dict[str, Any] | None = None
+
+        if pipeline_cfg.get("unzip_inputs"):
+            with StepTimer(
+                logger=logger,
+                step_name="Unzip inputs",
+                results=step_results,
+                status_mgr=status_mgr,
+            ):
+                input_zips = []
+                if not policy.skip_mri and inputs.get("mri_input"):
+                    input_zips.append(inputs["mri_input"])
+                if not policy.skip_tdc and inputs.get("tdc_input"):
+                    input_zips.append(inputs["tdc_input"])
+                unzip_root = run_ctx["scratch"] / "unzipped_inputs"
+                unzip_summary = expand_archives(input_zips, unzip_root)
+                artifacts["outputs"]["unzipped_inputs"] = unzip_summary
+        else:
+            _record_skip("Unzip inputs", "disabled")
+
         if not policy.skip_mri:
             with StepTimer(
                 logger=logger, step_name="MRI", results=step_results, status_mgr=status_mgr
@@ -364,6 +419,35 @@ def run_pipeline(
                 "duration_s": 0.0,
                 "error": "skip_mri",
             }
+
+        if pipeline_cfg.get("dicom_anon", {}).get("enabled") and not policy.skip_mri:
+            with StepTimer(
+                logger=logger,
+                step_name="DICOM anonymization",
+                results=step_results,
+                status_mgr=status_mgr,
+            ):
+                rules = build_dicom_rules(run_ctx["case"])
+                mode = pipeline_cfg.get("dicom_anon", {}).get("mode", "stub")
+                if mode == "stub":
+                    dicom_summary = run_dicom_anon_stub(
+                        mri_artifacts["final_dir"] if mri_artifacts else run_ctx["mr_dir"],
+                        run_ctx["case"],
+                        rules,
+                    )
+                else:
+                    dicom_summary = {
+                        "status": "skipped",
+                        "reason": "mode_not_supported",
+                        "mode": mode,
+                    }
+                    logger.warning("DICOM anonymization mode not supported: %s", mode)
+                artifacts["outputs"]["dicom_anon"] = dicom_summary
+        else:
+            _record_skip(
+                "DICOM anonymization",
+                "disabled" if not policy.skip_mri else "skip_mri",
+            )
 
         if not policy.skip_tdc:
             with StepTimer(
@@ -398,9 +482,85 @@ def run_pipeline(
                 "error": "skip_tdc",
             }
 
-    if not policy.dry_run and not policy.skip_tdc:
-        applog_summary = install_tdc_log(run_ctx["case_dir"], run_ctx["case"])
-        logger.info("TDC applog step: %s", applog_summary)
+        if pipeline_cfg.get("localdb", {}).get("enabled"):
+            db_path = pipeline_cfg.get("localdb", {}).get("path")
+            if db_path:
+                db_path = Path(db_path)
+            elif tdc_artifacts:
+                db_path = Path(tdc_artifacts["final_session"]) / "local.db"
+            else:
+                db_path = None
+
+            if db_path and db_path.exists():
+                with StepTimer(
+                    logger=logger,
+                    step_name="local.db check",
+                    results=step_results,
+                    status_mgr=status_mgr,
+                ):
+                    out_dir = run_ctx["tdc_dir"] / "applog" / "Logs"
+                    localdb_summary = run_localdb_step(
+                        db_path=db_path,
+                        case_id=run_ctx["case"],
+                        out_dir=out_dir,
+                        enable_anon=pipeline_cfg.get("localdb", {}).get("enabled", True),
+                        check_only=pipeline_cfg.get("localdb", {}).get("check_only", False),
+                        strict=pipeline_cfg.get("localdb", {}).get("strict", True),
+                    )
+                    artifacts["outputs"]["localdb"] = localdb_summary
+            else:
+                _record_skip("local.db check", "missing_db")
+                logger.warning("local.db missing; skipping localdb step: %s", db_path)
+        else:
+            _record_skip("local.db check", "disabled")
+
+        if not policy.skip_tdc:
+            with StepTimer(
+                logger=logger,
+                step_name="TDC applog",
+                results=step_results,
+                status_mgr=status_mgr,
+            ):
+                applog_summary = install_tdc_log(run_ctx["case_dir"], run_ctx["case"])
+                artifacts["outputs"]["applog"] = applog_summary
+                logger.info("TDC applog step: %s", applog_summary)
+        else:
+            _record_skip("TDC applog", "skip_tdc")
+
+        if pipeline_cfg.get("cleanup", {}).get("enabled"):
+            with StepTimer(
+                logger=logger,
+                step_name="Cleanup artifacts",
+                results=step_results,
+                status_mgr=status_mgr,
+            ):
+                cleanup_summary = cleanup_artifacts(
+                    run_ctx["scratch"],
+                    patterns=pipeline_cfg.get("cleanup", {}).get("patterns", []),
+                    dry_run=pipeline_cfg.get("cleanup", {}).get("dry_run", False),
+                )
+                artifacts["outputs"]["cleanup"] = cleanup_summary
+        else:
+            _record_skip("Cleanup artifacts", "disabled")
+
+        if pipeline_cfg.get("peda", {}).get("enabled"):
+            with StepTimer(
+                logger=logger,
+                step_name="PEDA step",
+                results=step_results,
+                status_mgr=status_mgr,
+            ):
+                peda_summary = run_peda_step(
+                    case_id=run_ctx["case"],
+                    working_case_dir=run_ctx["case_dir"],
+                    output_root_dir=run_ctx["misc_dir"],
+                    peda_version=pipeline_cfg.get("peda", {}).get("version", "v9.1.3"),
+                    enabled=True,
+                    mode=pipeline_cfg.get("peda", {}).get("mode", "stub"),
+                )
+                artifacts["outputs"]["peda"] = peda_summary
+        else:
+            _record_skip("PEDA step", "disabled")
 
     with StepTimer(
         logger=logger,
@@ -587,8 +747,42 @@ def main() -> int:
         "test_mode": policy.test_mode,
         "allow_workspace_zips": policy.allow_workspace_zips,
         "legacy_filename_rules": policy.legacy_filename_rules,
+        "unzip_inputs": cfg.get("unzip_inputs"),
+        "cleanup_enabled": cfg.get("cleanup_enabled"),
+        "cleanup_dry_run": cfg.get("cleanup_dry_run"),
+        "dicom_anon_enabled": cfg.get("dicom_anon_enabled"),
+        "dicom_anon_mode": cfg.get("dicom_anon_mode"),
+        "peda_enabled": cfg.get("peda_enabled"),
+        "peda_version": cfg.get("peda_version"),
+        "peda_mode": cfg.get("peda_mode"),
+        "localdb_enabled": cfg.get("localdb_enabled"),
+        "localdb_check_only": cfg.get("localdb_check_only"),
+        "localdb_strict": cfg.get("localdb_strict"),
     }
     run_ctx = derive_run_context(cfg)
+    pipeline_cfg = {
+        "unzip_inputs": cfg.get("unzip_inputs"),
+        "cleanup": {
+            "enabled": cfg.get("cleanup_enabled"),
+            "dry_run": cfg.get("cleanup_dry_run"),
+            "patterns": cfg.get("cleanup_patterns"),
+        },
+        "dicom_anon": {
+            "enabled": cfg.get("dicom_anon_enabled"),
+            "mode": cfg.get("dicom_anon_mode"),
+        },
+        "peda": {
+            "enabled": cfg.get("peda_enabled"),
+            "version": cfg.get("peda_version"),
+            "mode": cfg.get("peda_mode"),
+        },
+        "localdb": {
+            "enabled": cfg.get("localdb_enabled"),
+            "check_only": cfg.get("localdb_check_only"),
+            "strict": cfg.get("localdb_strict"),
+            "path": cfg.get("localdb_path"),
+        },
+    }
 
     logger, log_file, rich_available = init_logger(
         case=run_ctx["case"],
@@ -660,6 +854,7 @@ def main() -> int:
             pdf_input_path=pdf_input_path,
             artifacts=artifacts,
             policy=policy,
+            pipeline_cfg=pipeline_cfg,
         )
 
         status = "SUCCESS"

@@ -55,6 +55,21 @@ DEFAULTS: Dict[str, Any] = {
     "localdb_check_only": False,
     "localdb_strict": True,
     "localdb_path": None,
+    "unzip_inputs": False,
+    "cleanup_enabled": True,
+    "cleanup_dry_run": False,
+    "cleanup_patterns": [
+        "*.mat",
+        "local.db-wal",
+        "local.db-shm",
+        "*.db-wal",
+        "*.db-shm",
+    ],
+    "dicom_anon_enabled": False,
+    "dicom_anon_mode": "stub",
+    "peda_enabled": False,
+    "peda_version": "v9.1.3",
+    "peda_mode": "stub",
 }
 
 CANONICAL_LAYOUT = {
@@ -174,6 +189,7 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     logging_block = cfg.get("logging", {})
     localdb_block = cfg.get("localdb", {}) if isinstance(cfg.get("localdb"), dict) else {}
     metadata_block = cfg.get("metadata", {})
+    pipeline_block = cfg.get("pipeline", {}) if isinstance(cfg.get("pipeline"), dict) else {}
 
     case_id = case_block.get("id")
     root = _sanitize_path_value(case_block.get("root"), "root", raw_paths)
@@ -249,6 +265,14 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(localdb_path, str):
         localdb_path = _sanitize_path_value(localdb_path, "localdb_path", raw_paths)
 
+    cleanup_block = pipeline_block.get("cleanup", {}) if isinstance(pipeline_block.get("cleanup"), dict) else {}
+    dicom_block = pipeline_block.get("dicom_anon", {}) if isinstance(pipeline_block.get("dicom_anon"), dict) else {}
+    peda_block = pipeline_block.get("peda", {}) if isinstance(pipeline_block.get("peda"), dict) else {}
+
+    cleanup_patterns = cleanup_block.get("patterns", cfg.get("cleanup_patterns"))
+    if cleanup_patterns is None:
+        cleanup_patterns = DEFAULTS["cleanup_patterns"]
+
     flat = {
         **cfg,
         "root": root or cfg.get("root"),
@@ -302,6 +326,31 @@ def _flatten_nested(cfg: Dict[str, Any]) -> Dict[str, Any]:
             "strict", cfg.get("localdb_strict", DEFAULTS["localdb_strict"])
         ),
         "localdb_path": localdb_path,
+        "unzip_inputs": pipeline_block.get(
+            "unzip_inputs", cfg.get("unzip_inputs", DEFAULTS["unzip_inputs"])
+        ),
+        "cleanup_enabled": cleanup_block.get(
+            "enabled", cfg.get("cleanup_enabled", DEFAULTS["cleanup_enabled"])
+        ),
+        "cleanup_dry_run": cleanup_block.get(
+            "dry_run", cfg.get("cleanup_dry_run", DEFAULTS["cleanup_dry_run"])
+        ),
+        "cleanup_patterns": cleanup_patterns,
+        "dicom_anon_enabled": dicom_block.get(
+            "enabled", cfg.get("dicom_anon_enabled", DEFAULTS["dicom_anon_enabled"])
+        ),
+        "dicom_anon_mode": dicom_block.get(
+            "mode", cfg.get("dicom_anon_mode", DEFAULTS["dicom_anon_mode"])
+        ),
+        "peda_enabled": peda_block.get(
+            "enabled", cfg.get("peda_enabled", DEFAULTS["peda_enabled"])
+        ),
+        "peda_version": peda_block.get(
+            "version", cfg.get("peda_version", DEFAULTS["peda_version"])
+        ),
+        "peda_mode": peda_block.get(
+            "mode", cfg.get("peda_mode", DEFAULTS["peda_mode"])
+        ),
         "log_level": logging_block.get(
             "level_console", cfg.get("log_level", DEFAULTS["log_level"])
         ),
@@ -546,10 +595,27 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         "localdb_enabled",
         "localdb_check_only",
         "localdb_strict",
+        "unzip_inputs",
+        "cleanup_enabled",
+        "cleanup_dry_run",
+        "dicom_anon_enabled",
+        "peda_enabled",
     ):
         val = cfg.get(key)
         if not isinstance(val, bool):
             raise ValidationError(f"{key} must be a boolean")
+    if not isinstance(cfg.get("cleanup_patterns"), list):
+        raise ValidationError("cleanup_patterns must be a list")
+    if not isinstance(cfg.get("dicom_anon_mode"), str):
+        raise ValidationError("dicom_anon_mode must be a string")
+    if cfg.get("dicom_anon_mode") not in ("existing", "stub"):
+        raise ValidationError("dicom_anon_mode must be 'existing' or 'stub'")
+    if not isinstance(cfg.get("peda_version"), str):
+        raise ValidationError("peda_version must be a string")
+    if not isinstance(cfg.get("peda_mode"), str):
+        raise ValidationError("peda_mode must be a string")
+    if cfg.get("peda_mode") not in ("stub", "matlab"):
+        raise ValidationError("peda_mode must be 'stub' or 'matlab'")
     if cfg.get("log_level") is None:
         raise ValidationError("log_level must be set")
     policy = cfg.get("scratch_policy", DEFAULTS["scratch_policy"])

@@ -1152,3 +1152,675 @@
 2026-01-13 09:56:51,711 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-8\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
 2026-01-13 09:56:51,711 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
 2026-01-13 09:56:51,711 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:13:24,952 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:13:24,952 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:13:24,952 INFO pipeline Test mode: True
+2026-01-13 10:13:24,952 INFO pipeline Allow workspace zips: False
+2026-01-13 10:13:24,952 INFO pipeline Legacy filename rules: False
+2026-01-13 10:13:24,952 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:13:24,952 INFO pipeline START Controller validations
+2026-01-13 10:13:24,954 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:13:24,954 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:13:24,954 INFO pipeline START MRI
+2026-01-13 10:13:24,954 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:13:24,957 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=81e83b6e3661614494081f1ee9b5b46834050a713b4033316d7d84bbea740e70)
+2026-01-13 10:13:24,957 INFO pipeline MRI backup verified: attempts=1 src_sha256=81e83b6e3661614494081f1ee9b5b46834050a713b4033316d7d84bbea740e70 dst_sha256=81e83b6e3661614494081f1ee9b5b46834050a713b4033316d7d84bbea740e70
+2026-01-13 10:13:24,973 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:13:24,974 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:13:24,974 INFO pipeline START TDC
+2026-01-13 10:13:24,974 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:13:24,976 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=dfd4e74585377f0151385bb7c6592150f542411080f45a0ddab56ff7740a410a)
+2026-01-13 10:13:24,977 INFO pipeline TDC backup verified: attempts=1 src_sha256=dfd4e74585377f0151385bb7c6592150f542411080f45a0ddab56ff7740a410a dst_sha256=dfd4e74585377f0151385bb7c6592150f542411080f45a0ddab56ff7740a410a
+2026-01-13 10:13:24,995 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_uk5zhi7h
+2026-01-13 10:13:24,995 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_uk5zhi7h\TDC Sessions
+2026-01-13 10:13:24,995 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:13:24,995 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:13:24,996 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:13:24,998 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:13:24,999 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:13:25,000 INFO pipeline START local.db anonymization
+2026-01-13 10:13:25,008 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:13:25,009 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:13:25,012 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:13:25,012 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:13:25,012 INFO pipeline START TDC applog
+2026-01-13 10:13:25,013 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:13:25,014 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:13:25,014 INFO pipeline START Cleanup artifacts
+2026-01-13 10:13:25,056 INFO pipeline PASS  Cleanup artifacts (0.04s)
+2026-01-13 10:13:25,056 INFO pipeline START Treatment report
+2026-01-13 10:13:25,056 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:13:25,056 INFO pipeline START structure_guard
+2026-01-13 10:13:25,057 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:13:25,057 INFO pipeline START Finalization
+2026-01-13 10:13:25,057 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:13:25,124 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:13:25,124 INFO pipeline Artifacts:
+2026-01-13 10:13:25,124 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:13:25,124 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:13:25,124 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:13:25,124 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:13:25,290 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:13:25,290 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:13:25,290 INFO pipeline Test mode: True
+2026-01-13 10:13:25,291 INFO pipeline Allow workspace zips: False
+2026-01-13 10:13:25,291 INFO pipeline Legacy filename rules: False
+2026-01-13 10:13:25,291 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:13:25,291 INFO pipeline START Controller validations
+2026-01-13 10:13:25,292 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:13:25,292 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:13:25,292 INFO pipeline START MRI
+2026-01-13 10:13:25,293 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:13:25,295 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=81e83b6e3661614494081f1ee9b5b46834050a713b4033316d7d84bbea740e70)
+2026-01-13 10:13:25,295 INFO pipeline MRI backup verified: attempts=1 src_sha256=81e83b6e3661614494081f1ee9b5b46834050a713b4033316d7d84bbea740e70 dst_sha256=81e83b6e3661614494081f1ee9b5b46834050a713b4033316d7d84bbea740e70
+2026-01-13 10:13:25,312 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:13:25,312 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:13:25,312 INFO pipeline START TDC
+2026-01-13 10:13:25,312 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:13:25,314 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=dfd4e74585377f0151385bb7c6592150f542411080f45a0ddab56ff7740a410a)
+2026-01-13 10:13:25,314 INFO pipeline TDC backup verified: attempts=1 src_sha256=dfd4e74585377f0151385bb7c6592150f542411080f45a0ddab56ff7740a410a dst_sha256=dfd4e74585377f0151385bb7c6592150f542411080f45a0ddab56ff7740a410a
+2026-01-13 10:13:25,331 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_5zrkjaxt
+2026-01-13 10:13:25,331 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_5zrkjaxt\TDC Sessions
+2026-01-13 10:13:25,331 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:13:25,332 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:13:25,332 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:13:25,334 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:13:25,335 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:13:25,336 INFO pipeline START local.db anonymization
+2026-01-13 10:13:25,344 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:13:25,345 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:13:25,348 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:13:25,348 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:13:25,348 INFO pipeline START TDC applog
+2026-01-13 10:13:25,350 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:13:25,350 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:13:25,350 INFO pipeline START Cleanup artifacts
+2026-01-13 10:13:25,389 INFO pipeline PASS  Cleanup artifacts (0.04s)
+2026-01-13 10:13:25,389 INFO pipeline START Treatment report
+2026-01-13 10:13:25,389 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:13:25,389 INFO pipeline START structure_guard
+2026-01-13 10:13:25,390 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:13:25,390 INFO pipeline START Finalization
+2026-01-13 10:13:25,390 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:13:25,451 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:13:25,451 INFO pipeline Artifacts:
+2026-01-13 10:13:25,451 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:13:25,451 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-11\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:13:25,451 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:13:25,451 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:14:12,794 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:14:12,794 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:14:12,794 INFO pipeline Test mode: True
+2026-01-13 10:14:12,794 INFO pipeline Allow workspace zips: False
+2026-01-13 10:14:12,794 INFO pipeline Legacy filename rules: False
+2026-01-13 10:14:12,794 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:14:12,794 INFO pipeline START Controller validations
+2026-01-13 10:14:12,796 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:14:12,796 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:14:12,796 INFO pipeline START MRI
+2026-01-13 10:14:12,796 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:14:12,799 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0)
+2026-01-13 10:14:12,799 INFO pipeline MRI backup verified: attempts=1 src_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0 dst_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0
+2026-01-13 10:14:12,817 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:14:12,818 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:14:12,818 INFO pipeline START TDC
+2026-01-13 10:14:12,818 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:14:12,821 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50)
+2026-01-13 10:14:12,821 INFO pipeline TDC backup verified: attempts=1 src_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50 dst_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50
+2026-01-13 10:14:12,839 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_2y3hglng
+2026-01-13 10:14:12,839 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_2y3hglng\TDC Sessions
+2026-01-13 10:14:12,839 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:14:12,840 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:14:12,840 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:14:12,842 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:14:12,843 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:14:12,844 INFO pipeline START local.db anonymization
+2026-01-13 10:14:12,853 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:14:12,853 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:14:12,856 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:14:12,856 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:14:12,856 INFO pipeline START TDC applog
+2026-01-13 10:14:12,858 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:14:12,858 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:14:12,858 INFO pipeline START Cleanup artifacts
+2026-01-13 10:14:12,904 INFO pipeline PASS  Cleanup artifacts (0.05s)
+2026-01-13 10:14:12,904 INFO pipeline START Treatment report
+2026-01-13 10:14:12,904 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:14:12,904 INFO pipeline START structure_guard
+2026-01-13 10:14:12,905 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:14:12,905 INFO pipeline START Finalization
+2026-01-13 10:14:12,905 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:14:12,978 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:14:12,978 INFO pipeline Artifacts:
+2026-01-13 10:14:12,978 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:14:12,978 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:14:12,978 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:14:12,978 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:14:13,135 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:14:13,136 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:14:13,136 INFO pipeline Test mode: True
+2026-01-13 10:14:13,136 INFO pipeline Allow workspace zips: False
+2026-01-13 10:14:13,136 INFO pipeline Legacy filename rules: False
+2026-01-13 10:14:13,136 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:14:13,136 INFO pipeline START Controller validations
+2026-01-13 10:14:13,137 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:14:13,137 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:14:13,137 INFO pipeline START MRI
+2026-01-13 10:14:13,138 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:14:13,140 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0)
+2026-01-13 10:14:13,141 INFO pipeline MRI backup verified: attempts=1 src_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0 dst_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0
+2026-01-13 10:14:13,158 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:14:13,158 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:14:13,158 INFO pipeline START TDC
+2026-01-13 10:14:13,158 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:14:13,160 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50)
+2026-01-13 10:14:13,160 INFO pipeline TDC backup verified: attempts=1 src_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50 dst_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50
+2026-01-13 10:14:13,177 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped__ufirtjy
+2026-01-13 10:14:13,178 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped__ufirtjy\TDC Sessions
+2026-01-13 10:14:13,178 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:14:13,178 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:14:13,178 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:14:13,181 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:14:13,182 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:14:13,182 INFO pipeline START local.db anonymization
+2026-01-13 10:14:13,191 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:14:13,191 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:14:13,195 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:14:13,195 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:14:13,195 INFO pipeline START TDC applog
+2026-01-13 10:14:13,196 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:14:13,197 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:14:13,197 INFO pipeline START Cleanup artifacts
+2026-01-13 10:14:13,240 INFO pipeline PASS  Cleanup artifacts (0.04s)
+2026-01-13 10:14:13,241 INFO pipeline START Treatment report
+2026-01-13 10:14:13,241 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:14:13,241 INFO pipeline START structure_guard
+2026-01-13 10:14:13,242 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:14:13,242 INFO pipeline START Finalization
+2026-01-13 10:14:13,242 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:14:13,296 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:14:13,296 INFO pipeline Artifacts:
+2026-01-13 10:14:13,296 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:14:13,296 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-12\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:14:13,297 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:14:13,297 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:15:01,315 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:15:01,316 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:15:01,316 INFO pipeline Test mode: True
+2026-01-13 10:15:01,316 INFO pipeline Allow workspace zips: False
+2026-01-13 10:15:01,316 INFO pipeline Legacy filename rules: False
+2026-01-13 10:15:01,316 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:15:01,316 INFO pipeline START Controller validations
+2026-01-13 10:15:01,317 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:15:01,317 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:15:01,317 INFO pipeline START MRI
+2026-01-13 10:15:01,318 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:15:01,320 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0)
+2026-01-13 10:15:01,320 INFO pipeline MRI backup verified: attempts=1 src_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0 dst_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0
+2026-01-13 10:15:01,337 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:15:01,337 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:15:01,337 INFO pipeline START TDC
+2026-01-13 10:15:01,337 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:15:01,339 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50)
+2026-01-13 10:15:01,339 INFO pipeline TDC backup verified: attempts=1 src_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50 dst_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50
+2026-01-13 10:15:01,355 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_ftneh408
+2026-01-13 10:15:01,355 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_ftneh408\TDC Sessions
+2026-01-13 10:15:01,356 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:15:01,356 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:15:01,356 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:15:01,358 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:15:01,359 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:15:01,360 INFO pipeline START local.db anonymization
+2026-01-13 10:15:01,368 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:15:01,369 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:15:01,372 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:15:01,372 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:15:01,372 INFO pipeline START TDC applog
+2026-01-13 10:15:01,374 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:15:01,374 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:15:01,374 INFO pipeline START Cleanup artifacts
+2026-01-13 10:15:01,418 INFO pipeline PASS  Cleanup artifacts (0.04s)
+2026-01-13 10:15:01,418 INFO pipeline START Treatment report
+2026-01-13 10:15:01,418 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:15:01,418 INFO pipeline START structure_guard
+2026-01-13 10:15:01,419 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:15:01,420 INFO pipeline START Finalization
+2026-01-13 10:15:01,420 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:15:01,481 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:15:01,481 INFO pipeline Artifacts:
+2026-01-13 10:15:01,481 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:15:01,481 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:15:01,481 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:15:01,481 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:15:01,644 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:15:01,644 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:15:01,645 INFO pipeline Test mode: True
+2026-01-13 10:15:01,645 INFO pipeline Allow workspace zips: False
+2026-01-13 10:15:01,645 INFO pipeline Legacy filename rules: False
+2026-01-13 10:15:01,645 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:15:01,645 INFO pipeline START Controller validations
+2026-01-13 10:15:01,646 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:15:01,646 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:15:01,646 INFO pipeline START MRI
+2026-01-13 10:15:01,647 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:15:01,649 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0)
+2026-01-13 10:15:01,649 INFO pipeline MRI backup verified: attempts=1 src_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0 dst_sha256=3d6834bcf7a32a52f416e9d71d26a311eaebb63062b0d488e71e9b9f1ddd61f0
+2026-01-13 10:15:01,666 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:15:01,666 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:15:01,666 INFO pipeline START TDC
+2026-01-13 10:15:01,666 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:15:01,669 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50)
+2026-01-13 10:15:01,669 INFO pipeline TDC backup verified: attempts=1 src_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50 dst_sha256=b3de7bb58b01ceb89836a92324df8a44e8c89015165984c17fd928ca9e4e0d50
+2026-01-13 10:15:01,686 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zlsi_tzt
+2026-01-13 10:15:01,686 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zlsi_tzt\TDC Sessions
+2026-01-13 10:15:01,686 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:15:01,687 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:15:01,687 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:15:01,689 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:15:01,690 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:15:01,691 INFO pipeline START local.db anonymization
+2026-01-13 10:15:01,699 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:15:01,699 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:15:01,703 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:15:01,703 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:15:01,703 INFO pipeline START TDC applog
+2026-01-13 10:15:01,704 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:15:01,704 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:15:01,704 INFO pipeline START Cleanup artifacts
+2026-01-13 10:15:01,749 INFO pipeline PASS  Cleanup artifacts (0.04s)
+2026-01-13 10:15:01,749 INFO pipeline START Treatment report
+2026-01-13 10:15:01,749 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:15:01,749 INFO pipeline START structure_guard
+2026-01-13 10:15:01,750 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:15:01,751 INFO pipeline START Finalization
+2026-01-13 10:15:01,751 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:15:01,811 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:15:01,811 INFO pipeline Artifacts:
+2026-01-13 10:15:01,811 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:15:01,811 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-13\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:15:01,811 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:15:01,811 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:15:24,603 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:15:24,603 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:15:24,603 INFO pipeline Test mode: True
+2026-01-13 10:15:24,603 INFO pipeline Allow workspace zips: False
+2026-01-13 10:15:24,603 INFO pipeline Legacy filename rules: False
+2026-01-13 10:15:24,603 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:15:24,603 INFO pipeline START Controller validations
+2026-01-13 10:15:24,605 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:15:24,605 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:15:24,605 INFO pipeline START MRI
+2026-01-13 10:15:24,605 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:15:24,616 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3)
+2026-01-13 10:15:24,617 INFO pipeline MRI backup verified: attempts=1 src_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3 dst_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3
+2026-01-13 10:15:24,633 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-14\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:15:24,633 INFO pipeline PASS  MRI (0.03s)
+2026-01-13 10:15:24,633 INFO pipeline START TDC
+2026-01-13 10:15:24,633 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:15:24,644 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327)
+2026-01-13 10:15:24,644 INFO pipeline TDC backup verified: attempts=1 src_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327 dst_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327
+2026-01-13 10:15:24,661 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_gf3kyr4c
+2026-01-13 10:15:24,661 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_gf3kyr4c\TDC Sessions
+2026-01-13 10:15:24,661 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:15:24,662 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:15:24,662 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:15:24,664 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:15:24,665 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:15:24,666 INFO pipeline START local.db anonymization
+2026-01-13 10:15:24,675 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:15:24,675 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:15:24,678 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-14\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:15:24,678 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:15:24,678 INFO pipeline START TDC applog
+2026-01-13 10:15:24,680 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:15:24,680 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:15:24,680 INFO pipeline START Cleanup artifacts
+2026-01-13 10:15:24,730 INFO pipeline PASS  Cleanup artifacts (0.05s)
+2026-01-13 10:15:24,730 INFO pipeline START Treatment report
+2026-01-13 10:15:24,730 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:15:24,730 INFO pipeline START structure_guard
+2026-01-13 10:15:24,731 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:15:24,731 INFO pipeline START Finalization
+2026-01-13 10:15:24,731 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:15:24,789 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:15:24,789 INFO pipeline Artifacts:
+2026-01-13 10:15:24,789 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-14\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:15:24,789 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-14\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:15:24,789 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:15:24,789 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:21:33,661 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:21:33,661 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:21:33,661 INFO pipeline Test mode: True
+2026-01-13 10:21:33,661 INFO pipeline Allow workspace zips: False
+2026-01-13 10:21:33,661 INFO pipeline Legacy filename rules: False
+2026-01-13 10:21:33,661 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:21:33,661 INFO pipeline START Controller validations
+2026-01-13 10:21:33,663 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:21:33,663 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:21:33,663 INFO pipeline START MRI
+2026-01-13 10:21:33,663 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:21:33,666 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3)
+2026-01-13 10:21:33,666 INFO pipeline MRI backup verified: attempts=1 src_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3 dst_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3
+2026-01-13 10:21:33,682 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:21:33,682 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:21:33,682 INFO pipeline START TDC
+2026-01-13 10:21:33,682 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:21:33,684 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327)
+2026-01-13 10:21:33,684 INFO pipeline TDC backup verified: attempts=1 src_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327 dst_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327
+2026-01-13 10:21:33,702 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_auc1dqfu
+2026-01-13 10:21:33,703 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_auc1dqfu\TDC Sessions
+2026-01-13 10:21:33,703 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:21:33,703 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:21:33,703 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:21:33,706 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:21:33,707 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:21:33,707 INFO pipeline START local.db anonymization
+2026-01-13 10:21:33,715 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:21:33,716 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:21:33,719 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:21:33,719 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:21:33,719 INFO pipeline START TDC applog
+2026-01-13 10:21:33,720 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:21:33,721 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:21:33,721 INFO pipeline START Cleanup artifacts
+2026-01-13 10:21:33,775 INFO pipeline PASS  Cleanup artifacts (0.05s)
+2026-01-13 10:21:33,775 INFO pipeline START Treatment report
+2026-01-13 10:21:33,775 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:21:33,775 INFO pipeline START structure_guard
+2026-01-13 10:21:33,776 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:21:33,776 INFO pipeline START Finalization
+2026-01-13 10:21:33,776 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:21:33,844 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:21:33,844 INFO pipeline Artifacts:
+2026-01-13 10:21:33,844 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:21:33,844 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:21:33,844 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:21:33,844 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:21:34,019 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:21:34,019 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:21:34,020 INFO pipeline Test mode: True
+2026-01-13 10:21:34,020 INFO pipeline Allow workspace zips: False
+2026-01-13 10:21:34,020 INFO pipeline Legacy filename rules: False
+2026-01-13 10:21:34,020 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:21:34,020 INFO pipeline START Controller validations
+2026-01-13 10:21:34,021 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:21:34,021 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:21:34,021 INFO pipeline START MRI
+2026-01-13 10:21:34,022 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:21:34,024 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3)
+2026-01-13 10:21:34,024 INFO pipeline MRI backup verified: attempts=1 src_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3 dst_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3
+2026-01-13 10:21:34,041 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:21:34,041 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:21:34,041 INFO pipeline START TDC
+2026-01-13 10:21:34,042 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:21:34,043 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327)
+2026-01-13 10:21:34,044 INFO pipeline TDC backup verified: attempts=1 src_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327 dst_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327
+2026-01-13 10:21:34,061 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_4deqc41p
+2026-01-13 10:21:34,062 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_4deqc41p\TDC Sessions
+2026-01-13 10:21:34,062 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:21:34,062 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:21:34,062 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:21:34,065 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:21:34,066 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:21:34,066 INFO pipeline START local.db anonymization
+2026-01-13 10:21:34,075 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:21:34,075 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:21:34,078 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:21:34,078 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:21:34,078 INFO pipeline START TDC applog
+2026-01-13 10:21:34,080 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:21:34,080 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:21:34,080 INFO pipeline START Cleanup artifacts
+2026-01-13 10:21:34,139 INFO pipeline PASS  Cleanup artifacts (0.06s)
+2026-01-13 10:21:34,139 INFO pipeline START Treatment report
+2026-01-13 10:21:34,140 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:21:34,140 INFO pipeline START structure_guard
+2026-01-13 10:21:34,141 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:21:34,141 INFO pipeline START Finalization
+2026-01-13 10:21:34,141 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:21:34,213 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:21:34,213 INFO pipeline Artifacts:
+2026-01-13 10:21:34,213 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:21:34,213 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-15\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:21:34,213 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:21:34,213 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:23:51,651 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:23:51,651 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:23:51,652 INFO pipeline Test mode: True
+2026-01-13 10:23:51,652 INFO pipeline Allow workspace zips: False
+2026-01-13 10:23:51,652 INFO pipeline Legacy filename rules: False
+2026-01-13 10:23:51,652 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:23:51,652 INFO pipeline START Controller validations
+2026-01-13 10:23:51,653 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:23:51,654 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:23:51,654 INFO pipeline START MRI
+2026-01-13 10:23:51,654 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:23:51,667 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3)
+2026-01-13 10:23:51,667 INFO pipeline MRI backup verified: attempts=1 src_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3 dst_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3
+2026-01-13 10:23:51,684 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:23:51,684 INFO pipeline PASS  MRI (0.03s)
+2026-01-13 10:23:51,684 INFO pipeline START TDC
+2026-01-13 10:23:51,684 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:23:51,698 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327)
+2026-01-13 10:23:51,698 INFO pipeline TDC backup verified: attempts=1 src_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327 dst_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327
+2026-01-13 10:23:51,716 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_g9saxo6u
+2026-01-13 10:23:51,716 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_g9saxo6u\TDC Sessions
+2026-01-13 10:23:51,717 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:23:51,717 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:23:51,717 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:23:51,720 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:23:51,721 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:23:51,722 INFO pipeline START local.db anonymization
+2026-01-13 10:23:51,731 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:23:51,731 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:23:51,735 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:23:51,735 INFO pipeline PASS  TDC (0.05s)
+2026-01-13 10:23:51,735 INFO pipeline START TDC applog
+2026-01-13 10:23:51,736 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:23:51,736 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:23:51,736 INFO pipeline START Cleanup artifacts
+2026-01-13 10:23:51,798 INFO pipeline PASS  Cleanup artifacts (0.06s)
+2026-01-13 10:23:51,798 INFO pipeline START Treatment report
+2026-01-13 10:23:51,798 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:23:51,798 INFO pipeline START structure_guard
+2026-01-13 10:23:51,799 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:23:51,799 INFO pipeline START Finalization
+2026-01-13 10:23:51,799 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:23:51,892 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:23:51,893 INFO pipeline Artifacts:
+2026-01-13 10:23:51,893 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:23:51,893 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:23:51,893 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:23:51,893 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:23:52,062 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:23:52,062 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:23:52,062 INFO pipeline Test mode: True
+2026-01-13 10:23:52,062 INFO pipeline Allow workspace zips: False
+2026-01-13 10:23:52,062 INFO pipeline Legacy filename rules: False
+2026-01-13 10:23:52,062 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:23:52,062 INFO pipeline START Controller validations
+2026-01-13 10:23:52,064 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:23:52,064 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:23:52,064 INFO pipeline START MRI
+2026-01-13 10:23:52,064 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:23:52,067 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3)
+2026-01-13 10:23:52,067 INFO pipeline MRI backup verified: attempts=1 src_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3 dst_sha256=26fab3bb00b384d935f5fbb9eb310caba26f22082d58016a27e1863c17f782e3
+2026-01-13 10:23:52,084 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:23:52,084 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:23:52,084 INFO pipeline START TDC
+2026-01-13 10:23:52,084 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:23:52,086 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327)
+2026-01-13 10:23:52,086 INFO pipeline TDC backup verified: attempts=1 src_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327 dst_sha256=bd9eebdb8885ca37bec62818c227dce46fcd3d5154054d7c23165cc1caad8327
+2026-01-13 10:23:52,105 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_b72flzxx
+2026-01-13 10:23:52,105 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_b72flzxx\TDC Sessions
+2026-01-13 10:23:52,106 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:23:52,106 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:23:52,106 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:23:52,109 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:23:52,110 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:23:52,110 INFO pipeline START local.db anonymization
+2026-01-13 10:23:52,119 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:23:52,119 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:23:52,123 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:23:52,123 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:23:52,123 INFO pipeline START TDC applog
+2026-01-13 10:23:52,125 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:23:52,125 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:23:52,125 INFO pipeline START Cleanup artifacts
+2026-01-13 10:23:52,184 INFO pipeline PASS  Cleanup artifacts (0.06s)
+2026-01-13 10:23:52,184 INFO pipeline START Treatment report
+2026-01-13 10:23:52,184 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:23:52,184 INFO pipeline START structure_guard
+2026-01-13 10:23:52,185 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:23:52,186 INFO pipeline START Finalization
+2026-01-13 10:23:52,186 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:23:52,239 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:23:52,239 INFO pipeline Artifacts:
+2026-01-13 10:23:52,239 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:23:52,239 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-16\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:23:52,239 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:23:52,239 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:24:23,863 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:24:23,863 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:24:23,863 INFO pipeline Test mode: True
+2026-01-13 10:24:23,863 INFO pipeline Allow workspace zips: False
+2026-01-13 10:24:23,863 INFO pipeline Legacy filename rules: False
+2026-01-13 10:24:23,863 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:24:23,864 INFO pipeline START Controller validations
+2026-01-13 10:24:23,865 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:24:23,865 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:24:23,865 INFO pipeline START MRI
+2026-01-13 10:24:23,865 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:24:23,877 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061)
+2026-01-13 10:24:23,877 INFO pipeline MRI backup verified: attempts=1 src_sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061 dst_sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061
+2026-01-13 10:24:23,894 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-17\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:24:23,894 INFO pipeline PASS  MRI (0.03s)
+2026-01-13 10:24:23,894 INFO pipeline START TDC
+2026-01-13 10:24:23,894 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:24:23,909 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab)
+2026-01-13 10:24:23,909 INFO pipeline TDC backup verified: attempts=1 src_sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab dst_sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab
+2026-01-13 10:24:23,926 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zql6qdeh
+2026-01-13 10:24:23,926 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_zql6qdeh\TDC Sessions
+2026-01-13 10:24:23,926 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:24:23,926 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:24:23,926 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:24:23,929 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:24:23,930 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:24:23,930 INFO pipeline START local.db anonymization
+2026-01-13 10:24:23,939 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:24:23,939 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:24:23,942 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-17\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:24:23,942 INFO pipeline PASS  TDC (0.05s)
+2026-01-13 10:24:23,942 INFO pipeline START TDC applog
+2026-01-13 10:24:23,944 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:24:23,944 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:24:23,944 INFO pipeline START Cleanup artifacts
+2026-01-13 10:24:24,004 INFO pipeline PASS  Cleanup artifacts (0.06s)
+2026-01-13 10:24:24,004 INFO pipeline START Treatment report
+2026-01-13 10:24:24,004 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:24:24,004 INFO pipeline START structure_guard
+2026-01-13 10:24:24,005 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:24:24,005 INFO pipeline START Finalization
+2026-01-13 10:24:24,005 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:24:24,067 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:24:24,067 INFO pipeline Artifacts:
+2026-01-13 10:24:24,067 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-17\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:24:24,067 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-17\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:24:24,067 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:24:24,067 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:25:52,129 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:25:52,129 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:25:52,129 INFO pipeline Test mode: True
+2026-01-13 10:25:52,129 INFO pipeline Allow workspace zips: False
+2026-01-13 10:25:52,129 INFO pipeline Legacy filename rules: False
+2026-01-13 10:25:52,130 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:25:52,130 INFO pipeline START Controller validations
+2026-01-13 10:25:52,131 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:25:52,131 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:25:52,131 INFO pipeline START MRI
+2026-01-13 10:25:52,131 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:25:52,134 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061)
+2026-01-13 10:25:52,134 INFO pipeline MRI backup verified: attempts=1 src_sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061 dst_sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061
+2026-01-13 10:25:52,151 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:25:52,151 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:25:52,151 INFO pipeline START TDC
+2026-01-13 10:25:52,152 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:25:52,154 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab)
+2026-01-13 10:25:52,154 INFO pipeline TDC backup verified: attempts=1 src_sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab dst_sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab
+2026-01-13 10:25:52,174 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_fm1dsyjk
+2026-01-13 10:25:52,174 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_fm1dsyjk\TDC Sessions
+2026-01-13 10:25:52,174 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:25:52,174 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:25:52,175 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:25:52,177 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:25:52,178 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:25:52,179 INFO pipeline START local.db anonymization
+2026-01-13 10:25:52,187 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:25:52,187 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:25:52,191 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:25:52,191 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:25:52,191 INFO pipeline START TDC applog
+2026-01-13 10:25:52,193 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:25:52,193 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:25:52,193 INFO pipeline START Cleanup artifacts
+2026-01-13 10:25:52,265 INFO pipeline PASS  Cleanup artifacts (0.07s)
+2026-01-13 10:25:52,265 INFO pipeline START Treatment report
+2026-01-13 10:25:52,265 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:25:52,265 INFO pipeline START structure_guard
+2026-01-13 10:25:52,266 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:25:52,266 INFO pipeline START Finalization
+2026-01-13 10:25:52,267 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:25:52,333 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:25:52,333 INFO pipeline Artifacts:
+2026-01-13 10:25:52,333 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_test_mode_produces_schema0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:25:52,333 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_test_mode_produces_schema0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:25:52,333 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:25:52,333 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json
+2026-01-13 10:25:52,497 DEBUG pipeline Logger initialized for case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:25:52,497 INFO pipeline Run start case=TEST_CASE run_id=TEST_RUN
+2026-01-13 10:25:52,497 INFO pipeline Test mode: True
+2026-01-13 10:25:52,497 INFO pipeline Allow workspace zips: False
+2026-01-13 10:25:52,497 INFO pipeline Legacy filename rules: False
+2026-01-13 10:25:52,497 INFO pipeline Resolved inputs: mri=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip tdc=C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:25:52,497 INFO pipeline START Controller validations
+2026-01-13 10:25:52,499 INFO pipeline PASS  Controller validations (0.00s)
+2026-01-13 10:25:52,499 INFO pipeline Run plan ready (dry_run=False).
+2026-01-13 10:25:52,499 INFO pipeline START MRI
+2026-01-13 10:25:52,499 INFO pipeline MRI input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip
+2026-01-13 10:25:52,502 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\mri_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\mri_dummy.zip.bak (size=141 sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061)
+2026-01-13 10:25:52,502 INFO pipeline MRI backup verified: attempts=1 src_sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061 dst_sha256=10ddc102b5c43e5165d2f27be5ef50fb20d0b5bdf72954a36a2da9ffe3a67061
+2026-01-13 10:25:52,519 INFO pipeline MRI extracted to final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:25:52,519 INFO pipeline PASS  MRI (0.02s)
+2026-01-13 10:25:52,519 INFO pipeline START TDC
+2026-01-13 10:25:52,519 INFO pipeline TDC input: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip
+2026-01-13 10:25:52,521 INFO pipeline Copy verified: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\tests\fixtures\tdc_dummy.zip -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_dummy.zip.bak (size=697 sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab)
+2026-01-13 10:25:52,521 INFO pipeline TDC backup verified: attempts=1 src_sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab dst_sha256=736ea3ce97517aeec7fb67c1976c5822d51f6a0d166acf3a14494d58fbeb51ab
+2026-01-13 10:25:52,541 INFO pipeline TDC extracted: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_9ox9a0h2
+2026-01-13 10:25:52,541 INFO pipeline Resolved TDC root: C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\tdc_unzipped_9ox9a0h2\TDC Sessions
+2026-01-13 10:25:52,542 INFO pipeline No Logs/ folder in TDC input (skipping).
+2026-01-13 10:25:52,542 INFO pipeline TDC root children: ['_TEST_SESSION']
+2026-01-13 10:25:52,542 INFO pipeline Session: _TEST_SESSION
+2026-01-13 10:25:52,544 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\2025-01-01--00-00-00
+2026-01-13 10:25:52,546 INFO pipeline Copied dir -> C:\Users\nicks\AppData\Local\Temp\PEDA\TEST_CASE\TEST_RUN\TDC_staged\_TEST_SESSION\Raw
+2026-01-13 10:25:52,546 INFO pipeline START local.db anonymization
+2026-01-13 10:25:52,555 INFO pipeline PASS  local.db anonymization (0.01s)
+2026-01-13 10:25:52,555 INFO pipeline Anonymized local.db (tables: 1)
+2026-01-13 10:25:52,558 INFO pipeline TDC final: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:25:52,558 INFO pipeline PASS  TDC (0.04s)
+2026-01-13 10:25:52,558 INFO pipeline START TDC applog
+2026-01-13 10:25:52,559 INFO pipeline TDC applog step: {'status': 'skipped', 'reason': 'no_log_found', 'source_path': None, 'dest_path': None, 'source_dir_removed': False, 'source_dir': None, 'candidate_count': 0, 'selection_reason': None, 'src_sha256': None, 'dst_sha256': None}
+2026-01-13 10:25:52,559 INFO pipeline PASS  TDC applog (0.00s)
+2026-01-13 10:25:52,560 INFO pipeline START Cleanup artifacts
+2026-01-13 10:25:52,632 INFO pipeline PASS  Cleanup artifacts (0.07s)
+2026-01-13 10:25:52,632 INFO pipeline START Treatment report
+2026-01-13 10:25:52,632 INFO pipeline PASS  Treatment report (0.00s)
+2026-01-13 10:25:52,632 INFO pipeline START structure_guard
+2026-01-13 10:25:52,633 INFO pipeline PASS  structure_guard (0.00s)
+2026-01-13 10:25:52,633 INFO pipeline START Finalization
+2026-01-13 10:25:52,634 INFO pipeline PASS  Finalization (0.00s)
+2026-01-13 10:25:52,744 INFO pipeline Run complete: SUCCESS
+2026-01-13 10:25:52,744 INFO pipeline Artifacts:
+2026-01-13 10:25:52,744 INFO pipeline  - MRI final dir: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_no_prefixed_dirs_created0\TEST_CASE\MR DICOM\mri_dummy
+2026-01-13 10:25:52,744 INFO pipeline  - TDC final session: C:\Users\nicks\AppData\Local\Temp\pytest-of-nicks\pytest-18\test_no_prefixed_dirs_created0\TEST_CASE\TDC Sessions\_TEST_SESSION
+2026-01-13 10:25:52,744 INFO pipeline  - Log file: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN.log
+2026-01-13 10:25:52,744 INFO pipeline  - Manifest: C:\Users\nicks\Documents\GitHub\PEDA_Data_Processing_Suite\logs\TEST_CASE__TEST_RUN__manifest.json

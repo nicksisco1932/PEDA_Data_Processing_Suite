@@ -35,6 +35,7 @@ def anonymize_localdb(db_path: Path, case_id: str) -> Dict[str, Any]:
     db_path = Path(db_path)
     result: Dict[str, Any] = {"ok": False, "db": str(db_path), "counts": {}}
     missing: Dict[str, List[str]] = {}
+    updated_any = False
 
     conn = sqlite3.connect(str(db_path))
     try:
@@ -69,15 +70,19 @@ def anonymize_localdb(db_path: Path, case_id: str) -> Dict[str, Any]:
                 "updated_rows": cur.rowcount,
                 "columns": {c: cur.rowcount for c in cols},
             }
+            updated_any = True
 
-        if missing:
+        if not updated_any:
             conn.rollback()
-            result["error"] = "Missing required tables/columns"
-            result["missing"] = missing
+            result["error"] = "No anonymization updates applied"
+            if missing:
+                result["missing"] = missing
             return result
 
         conn.commit()
         result["ok"] = True
+        if missing:
+            result["missing"] = missing
         return result
     finally:
         conn.close()
