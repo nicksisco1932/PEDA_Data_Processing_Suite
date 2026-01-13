@@ -79,6 +79,21 @@ def safe_select_nonnull_distinct(conn: sqlite3.Connection, table: str, column: s
     return [r["v"] for r in rows]
 
 
+def audit_log_mentions_session_info(conn: sqlite3.Connection) -> bool:
+    tables = set(list_tables(conn))
+    if "AuditLogRecords" not in tables:
+        return False
+    cols = list_columns(conn, "AuditLogRecords")
+    if "AuditRecordBase_Type" not in cols:
+        return False
+    sql = (
+        "SELECT 1 FROM AuditLogRecords "
+        "WHERE AuditRecordBase_Type LIKE ? COLLATE NOCASE LIMIT 1;"
+    )
+    rows = fetch_all(conn, sql, ("%SessionInformationChangeRecord%",))
+    return bool(rows)
+
+
 # -----------------------------
 # Finding model
 # -----------------------------
@@ -160,13 +175,22 @@ def check_schema_reachability(conn: sqlite3.Connection, required_tables: List[st
     tables = set(list_tables(conn))
     for t in required_tables:
         if t not in tables:
-            findings.append(Finding(
-                severity="FAIL",
-                category="SCHEMA",
-                table=t,
-                column=None,
-                message=f"Missing required table: {t}"
-            ))
+            if t == "SessionInformationChangeRecord" and audit_log_mentions_session_info(conn):
+                findings.append(Finding(
+                    severity="WARN",
+                    category="SCHEMA",
+                    table=t,
+                    column=None,
+                    message="Missing SessionInformationChangeRecord table, but AuditLogRecords references it."
+                ))
+            else:
+                findings.append(Finding(
+                    severity="FAIL",
+                    category="SCHEMA",
+                    table=t,
+                    column=None,
+                    message=f"Missing required table: {t}"
+                ))
         else:
             findings.append(Finding(
                 severity="INFO",
@@ -182,7 +206,22 @@ def check_sessioninfo_change_record(conn: sqlite3.Connection, case_id: str) -> L
     table = "SessionInformationChangeRecord"
     tables = set(list_tables(conn))
     if table not in tables:
-        findings.append(Finding("FAIL", "SCHEMA", table, None, "Table not present; cannot check Patient* fields"))
+        if audit_log_mentions_session_info(conn):
+            findings.append(Finding(
+                "WARN",
+                "SCHEMA",
+                table,
+                None,
+                "Table not present; AuditLogRecords references SessionInformationChangeRecord."
+            ))
+        else:
+            findings.append(Finding(
+                "FAIL",
+                "SCHEMA",
+                table,
+                None,
+                "Table not present; cannot check Patient* fields",
+            ))
         return findings
 
     cols = list_columns(conn, table)

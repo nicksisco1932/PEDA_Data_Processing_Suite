@@ -81,11 +81,11 @@ pipeline:
     mode: "stub"
 
 logging:
-  dir: "{case_dir}\\Misc\\Logs"
+  dir: "{case_dir}\\run_logs"
   level_console: "INFO"           # Console verbosity
   level_file: "DEBUG"             # File verbosity (captured in rotating log)
   file_name: "{case_id}__{run_id}.log"
-  manifest_dir: "{case_dir}\\Misc\\Logs"
+  manifest_dir: "{case_dir}\\run_logs"
   manifest_name: "{case_id}__{run_id}__manifest.json"
 
 metadata:

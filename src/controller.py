@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 import MRI_proc
 import TDC_proc
+from src.annon_logs import get_annon_logs_dir
 from src.pipeline_steps.applog_step import install_tdc_log
 from src.pipeline_steps.cleanup_artifacts import cleanup_artifacts
 from src.pipeline_steps.dicom_anon_stub import run_dicom_anon_stub
@@ -23,6 +24,12 @@ from src.pipeline_steps.localdb_step import run_localdb_step
 from src.pipeline_steps.peda_step import run_peda_step
 from src.pipeline_steps.unzip_inputs import expand_archives
 from src.phi.dicom_rules import build_dicom_rules
+from src.paths import (
+    run_logs_dir,
+    run_manifest_path,
+    assert_no_forbidden_log_dirs,
+    delete_forbidden_log_dirs,
+)
 from src.logutil import (
     init_logger,
     StatusManager,
@@ -77,7 +84,8 @@ def _build_plan(
     plan.append(f"Create output dir: {misc_dir}")
     plan.append(f"Create output dir: {mr_dir}")
     plan.append(f"Create output dir: {tdc_dir}")
-    plan.append(f"Create output dir: {tdc_dir / 'applog' / 'Logs'}")
+    plan.append(f"Create output dir: {case_dir / 'annon_logs'}")
+    plan.append(f"Create output dir: {case_dir / 'run_logs'}")
     plan.append(
         f"TDC Raw output dir created if TDC produces it: {tdc_dir / '<session>' / 'Raw'}"
     )
@@ -218,10 +226,7 @@ def derive_run_context(cfg: Dict[str, Any]) -> Dict[str, Any]:
     tdc_dir = cfg.get("tdc_dir") or (case_dir / "TDC Sessions")
     misc_dir = cfg.get("misc_dir") or (case_dir / "Misc")
     scratch: Path = cfg["scratch"] or (case_dir / "scratch")
-    if cfg.get("log_dir"):
-        log_dir = cfg["log_dir"]
-    else:
-        log_dir = (misc_dir / "Logs") if case_dir.exists() else (Path.cwd() / "logs")
+    log_dir = run_logs_dir(case_dir)
     return {
         "root": root,
         "case": case,
@@ -311,7 +316,14 @@ def validate_inputs_and_prepare_dirs(
             misc_dir.mkdir(parents=True, exist_ok=True)
             mr_dir.mkdir(parents=True, exist_ok=True)
             tdc_dir.mkdir(parents=True, exist_ok=True)
-            (tdc_dir / "applog" / "Logs").mkdir(parents=True, exist_ok=True)
+            get_annon_logs_dir(case_dir)
+            run_ctx["log_dir"].mkdir(parents=True, exist_ok=True)
+            pre_removed = delete_forbidden_log_dirs(case_dir, logger=logger)
+            if pre_removed:
+                logger.warning(
+                    "Removed forbidden log dirs before processing: %s",
+                    [str(p) for p in pre_removed],
+                )
 
         if not policy.skip_mri:
             _require_zip_input(
@@ -373,6 +385,7 @@ def run_pipeline(
         _record_skip("DICOM anonymization", "dry-run")
         _record_skip("local.db check", "dry-run")
         _record_skip("TDC applog", "dry-run")
+        _record_skip("Cleanup forbidden log dirs", "dry-run")
         _record_skip("Cleanup artifacts", "dry-run")
         _record_skip("PEDA step", "dry-run")
     else:
@@ -498,7 +511,7 @@ def run_pipeline(
                     results=step_results,
                     status_mgr=status_mgr,
                 ):
-                    out_dir = run_ctx["tdc_dir"] / "applog" / "Logs"
+                    out_dir = get_annon_logs_dir(run_ctx["case_dir"])
                     localdb_summary = run_localdb_step(
                         db_path=db_path,
                         case_id=run_ctx["case"],
@@ -521,7 +534,14 @@ def run_pipeline(
                 results=step_results,
                 status_mgr=status_mgr,
             ):
-                applog_summary = install_tdc_log(run_ctx["case_dir"], run_ctx["case"])
+                search_roots = []
+                if tdc_artifacts and tdc_artifacts.get("tdc_logs_root"):
+                    search_roots.append(tdc_artifacts["tdc_logs_root"])
+                applog_summary = install_tdc_log(
+                    run_ctx["case_dir"],
+                    run_ctx["case"],
+                    search_roots=search_roots or None,
+                )
                 artifacts["outputs"]["applog"] = applog_summary
                 logger.info("TDC applog step: %s", applog_summary)
         else:
@@ -552,8 +572,7 @@ def run_pipeline(
             ):
                 peda_summary = run_peda_step(
                     case_id=run_ctx["case"],
-                    working_case_dir=run_ctx["case_dir"],
-                    output_root_dir=run_ctx["misc_dir"],
+                    case_dir=run_ctx["case_dir"],
                     peda_version=pipeline_cfg.get("peda", {}).get("version", "v9.1.3"),
                     enabled=True,
                     mode=pipeline_cfg.get("peda", {}).get("mode", "stub"),
@@ -561,6 +580,23 @@ def run_pipeline(
                 artifacts["outputs"]["peda"] = peda_summary
         else:
             _record_skip("PEDA step", "disabled")
+
+        with StepTimer(
+            logger=logger,
+            step_name="Cleanup forbidden log dirs",
+            results=step_results,
+            status_mgr=status_mgr,
+        ):
+            removed = delete_forbidden_log_dirs(run_ctx["case_dir"], logger=logger)
+            if removed:
+                logger.warning(
+                    "Forbidden log dirs created during run and removed: %s",
+                    [str(p) for p in removed],
+                )
+            artifacts["outputs"]["forbidden_logs_cleanup"] = {
+                "removed": [str(p) for p in removed]
+            }
+            assert_no_forbidden_log_dirs(run_ctx["case_dir"])
 
     with StepTimer(
         logger=logger,
@@ -593,6 +629,14 @@ def run_pipeline(
         logger=logger, step_name="structure_guard", results=step_results, status_mgr=status_mgr
     ):
         import src.structure_guard as sg
+        peda_version = pipeline_cfg.get("peda", {}).get("version", "v9.1.3")
+        peda_enabled = pipeline_cfg.get("peda", {}).get("enabled", False)
+        allowed_top_dirs: set[str] = set()
+        forbidden_top_files: set[str] = set()
+        if peda_enabled:
+            allowed_top_dirs.add(f"{run_ctx['case']} PEDA{peda_version}-Video")
+        else:
+            forbidden_top_files.add(f"{run_ctx['case']} PEDA{peda_version}-Data.zip")
 
         if policy.legacy_filename_rules:
             pdf_expected = run_ctx["misc_dir"] / f"{run_ctx['case']}_TreatmentReport.pdf"
@@ -615,6 +659,8 @@ def run_pipeline(
                 mr_dir_name=run_ctx["mr_dir"].name,
                 tdc_dir_name=run_ctx["tdc_dir"].name,
                 legacy_names=policy.legacy_filename_rules,
+                allowed_top_dirs=allowed_top_dirs,
+                forbidden_top_files=forbidden_top_files,
                 dry_run=True,
             )
             if initial_errs:
@@ -632,6 +678,8 @@ def run_pipeline(
                 mr_dir_name=run_ctx["mr_dir"].name,
                 tdc_dir_name=run_ctx["tdc_dir"].name,
                 legacy_names=policy.legacy_filename_rules,
+                allowed_top_dirs=allowed_top_dirs,
+                forbidden_top_files=forbidden_top_files,
             )
             if initial_errs:
                 logger.info("structure_guard detected layout issues.")
@@ -800,11 +848,7 @@ def main() -> int:
         cfg.get("tdc_input"),
     )
 
-    manifest_dir = cfg.get("manifest_dir") or run_ctx["log_dir"]
-    manifest_name = (
-        cfg.get("manifest_name") or f"{run_ctx['case']}__{run_id}__manifest.json"
-    )
-    manifest_path = Path(manifest_dir) / manifest_name
+    manifest_path = run_manifest_path(run_ctx["case_dir"], run_ctx["case"], run_id)
     step_results: Dict[str, Any] = {}
     inputs: Dict[str, Path] = {}
     artifacts: Dict[str, Any] = {"outputs": {}}

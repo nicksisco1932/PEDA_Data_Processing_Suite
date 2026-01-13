@@ -43,15 +43,15 @@ def verify(
     mr_dir_name: str | None = None,
     tdc_dir_name: str | None = None,
     legacy_names: bool = False,
+    allowed_top_dirs: set[str] | None = None,
+    forbidden_top_dirs: set[str] | None = None,
+    forbidden_top_files: set[str] | None = None,
 ) -> list[str]:
     errs: list[str] = []
     misc = case_root / (misc_dir_name or "Misc")
     mr   = case_root / (mr_dir_name or "MR DICOM")
     tdc  = case_root / (tdc_dir_name or "TDC Sessions")
-    applog = tdc / "applog"
-    logs = applog / "Logs"
-
-    for d in [misc, mr, tdc, applog, logs]:
+    for d in [misc, mr, tdc]:
         if not d.exists():
             errs.append(f"MISSING: {d}")
 
@@ -68,24 +68,45 @@ def verify(
 
     root_logs = case_root / "Logs"
     if root_logs.exists():
-        errs.append("Root 'Logs' should be under TDC Sessions/applog/Logs")
+        errs.append("Root 'Logs' should not exist under case root")
 
     root_applog = case_root / "applog" / "Logs"
     if root_applog.exists():
-        errs.append("Root applog/Logs should be under TDC Sessions/applog/Logs")
+        errs.append("Root applog/Logs should not exist under case root")
 
+    tdc_root = case_root / "TDC Sessions"
+    if tdc_root.exists():
+        for path in tdc_root.rglob("*"):
+            if not path.is_dir():
+                continue
+            if path.name.lower() == "applog":
+                errs.append(f"Forbidden TDC Sessions applog dir: {path}")
+                continue
+            if path.name.lower() == "logs" and path.parent.name.lower() == "applog":
+                errs.append(f"Forbidden TDC Sessions applog/Logs dir: {path}")
+
+    extra_allowed = set(allowed_top_dirs or [])
+    forbidden_dirs = set(forbidden_top_dirs or [])
+    forbidden_files = set(forbidden_top_files or [])
     allowed_top = {
         misc.name,
         mr.name,
         tdc.name,
+        "annon_logs",
+        "run_logs",
         "scratch",
         "run_manifests",
     }
     extra_dirs = []
     for p in case_root.iterdir():
         if not p.is_dir():
+            if p.is_file() and p.name in forbidden_files:
+                errs.append(f"Forbidden top-level file: {p}")
             continue
-        if p.name in allowed_top:
+        if p.name in forbidden_dirs:
+            errs.append(f"Forbidden top-level dir: {p}")
+            continue
+        if p.name in allowed_top or p.name in extra_allowed:
             continue
         if SESSION_DIR_RE.match(p.name):
             continue
@@ -110,9 +131,6 @@ def fix(
     misc = _ensure_dir(case_root / (misc_dir_name or "Misc"))
     mr   = _ensure_dir(case_root / (mr_dir_name or "MR DICOM"))
     tdc  = _ensure_dir(case_root / (tdc_dir_name or "TDC Sessions"))
-    applog = _ensure_dir(tdc / "applog")
-    logs = _ensure_dir(applog / "Logs")
-
     # 1) Move stray session dirs into TDC Sessions
     for p in case_root.iterdir():
         if p.is_dir() and SESSION_DIR_RE.match(p.name):
@@ -125,39 +143,20 @@ def fix(
                     shutil.move(str(p), str(dest))
                     changes.append(f"MOVED session dir -> {dest}")
 
-    # 2) Merge root 'Logs' into TDC Sessions/applog/Logs
+    # 2) Remove root Logs/applog if present (do not relocate)
     root_logs = case_root / "Logs"
     if root_logs.exists():
-        for item in root_logs.rglob("*"):
-            if item.is_file():
-                rel = item.relative_to(root_logs)
-                dst = logs / rel
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    shutil.move(str(item), str(dst))
-                except Exception:
-                    shutil.copy2(item, dst)
         try:
             shutil.rmtree(root_logs)
-            changes.append("MERGED root Logs -> TDC Sessions/applog/Logs")
+            changes.append("REMOVED root Logs")
         except Exception:
             pass
 
-    # 2b) Merge root applog/Logs into TDC Sessions/applog/Logs
-    root_applog = case_root / "applog" / "Logs"
+    root_applog = case_root / "applog"
     if root_applog.exists():
-        for item in root_applog.rglob("*"):
-            if item.is_file():
-                rel = item.relative_to(root_applog)
-                dst = logs / rel
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    shutil.move(str(item), str(dst))
-                except Exception:
-                    shutil.copy2(item, dst)
         try:
-            shutil.rmtree(case_root / "applog")
-            changes.append("MERGED root applog/Logs -> TDC Sessions/applog/Logs")
+            shutil.rmtree(root_applog)
+            changes.append("REMOVED root applog")
         except Exception:
             pass
 
@@ -202,6 +201,9 @@ def enforce(
     mr_dir_name: str | None = None,
     tdc_dir_name: str | None = None,
     legacy_names: bool = False,
+    allowed_top_dirs: set[str] | None = None,
+    forbidden_top_dirs: set[str] | None = None,
+    forbidden_top_files: set[str] | None = None,
     dry_run: bool = False,
 ) -> tuple[list[str], list[str], list[str]]:
     initial_errs = verify(
@@ -212,6 +214,9 @@ def enforce(
         mr_dir_name=mr_dir_name,
         tdc_dir_name=tdc_dir_name,
         legacy_names=legacy_names,
+        allowed_top_dirs=allowed_top_dirs,
+        forbidden_top_dirs=forbidden_top_dirs,
+        forbidden_top_files=forbidden_top_files,
     )
     if not initial_errs:
         return [], [], []
@@ -234,6 +239,9 @@ def enforce(
         mr_dir_name=mr_dir_name,
         tdc_dir_name=tdc_dir_name,
         legacy_names=legacy_names,
+        allowed_top_dirs=allowed_top_dirs,
+        forbidden_top_dirs=forbidden_top_dirs,
+        forbidden_top_files=forbidden_top_files,
     )
     for err in fix_errors:
         if err not in final_errs:

@@ -28,7 +28,7 @@ def test_pipeline_localdb_success() -> None:
     session_name = "_2025-11-05--07-05-25 122867438"
     with TemporaryDirectory() as tmp:
         paths = make_dummy_case_tree(Path(tmp), case_id, session_name)
-        report_dir = paths.case_dir / "TDC Sessions" / "applog" / "Logs"
+        report_dir = paths.case_dir / "annon_logs"
         report_path = report_dir / "localdb_check_post.json"
 
         try:
@@ -62,7 +62,7 @@ def test_pipeline_localdb_check_only_strict_fails() -> None:
     session_name = "_2025-11-05--07-05-25 122867438"
     with TemporaryDirectory() as tmp:
         paths = make_dummy_case_tree(Path(tmp), case_id, session_name)
-        report_dir = paths.case_dir / "TDC Sessions" / "applog" / "Logs"
+        report_dir = paths.case_dir / "annon_logs"
         report_path = report_dir / "localdb_check_pre.json"
 
         try:

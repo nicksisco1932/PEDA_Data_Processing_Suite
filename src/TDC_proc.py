@@ -128,6 +128,7 @@ def run(
             "final_session": tdc_dir / "UNKNOWN_SESSION",
             "local_db": None,
             "session_zips": [],
+            "tdc_logs_root": None,
         }
 
     try:
@@ -155,23 +156,7 @@ def run(
             raise ValidationError(f"Resolved TDC root does not exist: {tdc_root}")
         log.info("Resolved TDC root: %s", tdc_root)
 
-        # 3) copy Logs -> Misc\Logs (if present)
-        logs_src = tmp / "Logs"
-        if not logs_src.exists():
-            wrapper_logs = tdc_root.parent / "Logs"
-            if wrapper_logs.exists():
-                logs_src = wrapper_logs
-        if logs_src.exists() and logs_src.is_dir():
-            target_logs = misc_dir / "Logs"
-            n, final_logs = 1, target_logs
-            while final_logs.exists():
-                final_logs = misc_dir / (f"Logs__{n}")
-                n += 1
-            final_logs.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(logs_src, final_logs)
-            log.info("Copied Logs: %s", final_logs)
-        else:
-            log.info("No Logs/ folder in TDC input (skipping).")
+        tdc_logs_root = tdc_root.parent if tdc_root.name == "TDC Sessions" else tdc_root
 
         # 4) find the session directory
         tdc_children = [p.name for p in tdc_root.iterdir() if p.is_dir()]
@@ -289,4 +274,5 @@ def run(
         "final_session": target,
         "local_db": staged_db,
         "session_zips": session_zips,
+        "tdc_logs_root": tdc_logs_root,
     }

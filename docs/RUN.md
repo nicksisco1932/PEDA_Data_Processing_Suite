@@ -23,26 +23,36 @@ Outputs and locations
 - Canonical case directory layout (required):
 ```
 <root>\<case_id>
-│
-├── Misc
-│   └── <case_id>_TreatmentReport.pdf
-│
-├── MR DICOM
-│   └── <case_id>_MRI.zip
-│
-├── <case_id> PEDAv9.1.3-Data.zip (placeholder)
-│
-└── TDC Sessions
-    ├── applog\Logs\
-    │   └── <case_id>_log.txt
-    └── Raw\<YYYY-MM-DD>\
+|-- Misc
+|   |-- <case_id>_TreatmentReport.pdf
+|   |-- Logs
+|       |-- <case_id> Tdc.<YYYY_MM_DD>.log
+|
+|-- MR DICOM
+|   |-- <case_id>_MRI.zip
+|
+|-- <case_id> PEDAv9.1.3-Data.zip (placeholder)
+|
+|-- run_logs
+|   |-- <case_id>__<run_id>.log
+|   |-- <case_id>__<run_id>__manifest.json
+|
+|-- annon_logs
+|   |-- localdb_check_pre.json
+|   |-- localdb_check_post.json
+|   |-- PEDA_run_log.txt
+|
+|-- TDC Sessions
+    |-- <session_name>
+        |-- Raw\<YYYY-MM-DD>\
 ```
 - Inputs can live anywhere (explicit paths or auto-discovery); outputs are always written to the canonical folders above.
 - MRI final zip: `<root>/<case>/MR DICOM/<case>_MRI.zip`
 - TDC final session: `<root>/<case>/TDC Sessions/<session_name>`
 - Treatment report (if provided): `<root>/<case>/Misc/<case>_TreatmentReport.pdf`
-- Logs: `<root>/<case>/Misc/Logs/<case>__<run_id>.log`
-- Manifests: `<root>/<case>/run_manifests/<case>__<run_id>__manifest.json`
+- PEDA artifacts (stub): `<root>/<case>/<case> PEDAv9.1.3-Video`, `<root>/<case>/<case> PEDAv9.1.3-Data.zip`, `<root>/<case>/annon_logs/PEDA_run_log.txt`
+- Run logs: `<root>/<case>/run_logs/<case>__<run_id>.log`
+- Manifests: `<root>/<case>/run_logs/<case>__<run_id>__manifest.json`
 
 Dry-run behavior
 - Performs validations only and logs a planned actions list.

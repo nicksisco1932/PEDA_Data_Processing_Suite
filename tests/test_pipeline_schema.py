@@ -49,11 +49,18 @@ def test_test_mode_produces_schema(tmp_path: Path) -> None:
     misc_dir = case_dir / "Misc"
     mr_dir = case_dir / "MR DICOM"
     tdc_dir = case_dir / "TDC Sessions"
+    run_logs_dir = case_dir / "run_logs"
+    annon_logs_dir = case_dir / "annon_logs"
     assert misc_dir.is_dir()
     assert mr_dir.is_dir()
     assert tdc_dir.is_dir()
+    assert run_logs_dir.is_dir()
+    assert annon_logs_dir.is_dir()
 
     assert list(mr_dir.rglob("*.zip")) == []
+    assert not list(case_dir.rglob("Logs__*"))
+    assert not list(tdc_dir.rglob("applog"))
+    assert not list(tdc_dir.rglob("applog/Logs"))
 
     workspaces = [p for p in tdc_dir.iterdir() if p.is_dir() and p.name.startswith("_")]
     assert len(workspaces) == 1
@@ -62,6 +69,14 @@ def test_test_mode_produces_schema(tmp_path: Path) -> None:
     assert (workspace / "local.db").is_file()
     assert (workspace / "Raw").is_dir()
     assert list(workspace.rglob("*.zip")) == []
+
+    assert (run_logs_dir / f"{case_id}__TEST_RUN.log").is_file()
+    assert (run_logs_dir / f"{case_id}__TEST_RUN__manifest.json").is_file()
+
+    misc_logs_dir = misc_dir / "Logs"
+    if misc_logs_dir.exists():
+        assert not (misc_logs_dir / f"{case_id}__TEST_RUN.log").exists()
+        assert not (misc_logs_dir / f"{case_id}__TEST_RUN__manifest.json").exists()
 
 
 def test_no_prefixed_dirs_created(tmp_path: Path) -> None:
@@ -87,3 +102,29 @@ def test_no_prefixed_dirs_created(tmp_path: Path) -> None:
     assert not (case_dir / f"{case_id} Misc").exists()
     assert not (case_dir / f"{case_id} MR DICOM").exists()
     assert not (case_dir / f"{case_id} TDC Sessions").exists()
+
+
+def test_no_logs_suffix_created_when_misc_logs_exists(tmp_path: Path) -> None:
+    _ensure_fixtures()
+    case_id = "TEST_CASE"
+    case_dir = tmp_path / case_id
+    misc_logs = case_dir / "Misc" / "Logs"
+    misc_logs.mkdir(parents=True, exist_ok=True)
+    (misc_logs / "preexisting.txt").write_text("x", encoding="utf-8")
+
+    proc = _run_controller(
+        "--root",
+        str(tmp_path),
+        "--case",
+        case_id,
+        "--mri-input",
+        str(MRI_ZIP),
+        "--tdc-input",
+        str(TDC_ZIP),
+        "--test-mode",
+        "--run-id",
+        "TEST_RUN",
+        "--no-localdb-enabled",
+    )
+    assert proc.returncode == 0, f"controller failed:\n{proc.stdout}\n{proc.stderr}"
+    assert not list(case_dir.rglob("Logs__*"))

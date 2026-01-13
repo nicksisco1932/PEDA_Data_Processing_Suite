@@ -12,15 +12,24 @@ D:\Data_Clean\017_01-474
 |
 +-- Misc
 |   +-- 017_01-474_TreatmentReport.pdf
+|   +-- Logs\
+|       +-- 017_01-474 Tdc.2025_11_05.log
 |
 +-- MR DICOM
 |   +-- 017_01-474_MRI.zip
 |
 +-- 017_01-474 PEDAv9.1.3-Data.zip (placeholder)
 |
++-- run_logs
+|   +-- 017_01-474__20260113_123000.log
+|   +-- 017_01-474__20260113_123000__manifest.json
+|
++-- annon_logs
+|   +-- localdb_check_pre.json
+|   +-- localdb_check_post.json
+|   +-- PEDA_run_log.txt
+|
 +-- TDC Sessions
-    +-- applog\Logs\
-    |   +-- 017-01-474_log.txt
     +-- Raw\2025-09-29\
 
 Requirements
@@ -36,13 +45,18 @@ Requirements
    - TDC output MUST land under:
      <tdc_dir>\<session_name>\...
      and MUST preserve or produce:
-       - applog\Logs\... (if present or created by upstream steps)
        - Raw\YYYY-MM-DD\... (or whatever the session content dictates)
+   - TDC log MUST land at:
+     <case_dir>\Misc\Logs\<case_id> Tdc.<YYYY_MM_DD>.log
+   - Run log + manifest MUST land at:
+     <case_dir>\run_logs\<case_id>__<run_id>.log
+     <case_dir>\run_logs\<case_id>__<run_id>__manifest.json
 
 3) No new top-level folders under case_dir except:
    - scratch (transient)
    - run_manifests
-   - Logs output directory as configured
+   - run_logs
+   - annon_logs
 
 4) Auto-discovery (if used) should search:
    - <case_dir>\incoming\
@@ -65,7 +79,7 @@ Requirements
    - Always name the expected folder and show the computed full path.
 
 Notes
-- The pipeline must tolerate existing applog/Raw content in TDC Sessions.
+- The pipeline must tolerate existing applog content in TDC Sessions and remove it during cleanup.
 - On rerun, avoid overwriting existing session output; use suffixing behavior.
 - Preserve Windows path compatibility and prefer pathlib.
 
@@ -76,24 +90,30 @@ After pipeline staging and normalization, agents may assume the following:
 <CaseID>\
 |-- Misc\
 |   |-- <Treatment Report PDF>
+|   |-- Logs\
+|       |-- <CaseID> Tdc.<YYYY_MM_DD>.log
 |
 |-- MR DICOM\
 |   |-- <CaseID>_MRI.zip
 |
+|-- run_logs\
+|   |-- <CaseID>__<RunID>.log
+|   |-- <CaseID>__<RunID>__manifest.json
+|
+|-- annon_logs\
+|   |-- localdb_check_pre.json
+|   |-- localdb_check_post.json
+|   |-- PEDA_run_log.txt
+|
 |-- TDC Sessions\
-    |-- applog\
-    |   |-- <CaseID> Tdc.<YYYY_MM_DD>.log
-    |
     |-- <Session_Name>\
-        |-- applog\
-        |   |-- Logs\
         |-- Raw\
 
 Notes:
-- All TDC log files (.log or .txt) are consolidated into `TDC Sessions\applog\`.
-- Source directories (`Misc\Logs\`, `TDC Sessions\Logs\`) are removed during staging.
-- The copied log file is hash-verified (SHA-256) against the source prior to removal.
-- Agents must not expect log files outside `TDC Sessions\applog\`.
+- All TDC log files (.log or .txt) are consolidated into `Misc\Logs\` as `<CaseID> Tdc.<YYYY_MM_DD>.log`.
+- Run logs and manifests live under `run_logs\`.
+- Anonymization/check artifacts live under `annon_logs\`.
+- Agents must not expect any `applog\Logs` directories under `TDC Sessions`.
 
 Invariant:
-Agents must treat `TDC Sessions\applog\` as the sole authoritative location for TDC logs.
+Agents must treat `Misc\Logs\` as the sole authoritative location for TDC logs.

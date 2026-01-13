@@ -10,6 +10,7 @@ import zipfile
 from pathlib import Path
 from typing import Dict, Any, List
 
+from src.annon_logs import get_annon_logs_dir
 from src.pipeline_steps.cleanup_artifacts import cleanup_artifacts
 from src.tools.sqlite_artifact_cleanup import cleanup_sqlite_sidecars
 
@@ -43,15 +44,13 @@ def _cleanup_sqlite_sidecars(root: Path) -> None:
 
 def run_peda_step(
     case_id: str,
-    working_case_dir: Path,
-    output_root_dir: Path,
+    case_dir: Path,
     peda_version: str = "v9.1.3",
     enabled: bool = True,
     mode: str = "stub",
 ) -> Dict[str, Any]:
     log = logging.getLogger(__name__)
-    working_case_dir = Path(working_case_dir)
-    output_root_dir = Path(output_root_dir)
+    case_dir = Path(case_dir)
 
     if not enabled:
         log.info("PEDA step skipped (disabled).")
@@ -61,10 +60,11 @@ def run_peda_step(
     video_dir_name = f"{case_id} PEDA{peda_version}-Video"
     data_zip_name = f"{case_id} PEDA{peda_version}-Data.zip"
 
-    peda_out_dir = working_case_dir / peda_dir_name
+    peda_out_dir = case_dir / peda_dir_name
     applog_dir = peda_out_dir / "applog"
     results_dir = peda_out_dir / "Results"
-    stub_log_path = applog_dir / "peda_log.txt"
+    annon_logs_dir = get_annon_logs_dir(case_dir)
+    stub_log_path = annon_logs_dir / "PEDA_run_log.txt"
 
     if mode == "stub":
         log.warning("PEDA step running in stub mode; MATLAB/MAIN_PEDA not executed.")
@@ -74,13 +74,13 @@ def run_peda_step(
         (results_dir / "dummy.mat").write_bytes(b"STUB_MATLAB_DATA")
         (results_dir / "summary.txt").write_text("STUB SUMMARY\n", encoding="utf-8")
 
-        intended_cmd = _intended_matlab_command(stub_log_path, working_case_dir)
+        intended_cmd = _intended_matlab_command(stub_log_path, case_dir)
         stub_log_path.write_text(
             "\n".join(
                 [
                     "STUB: PEDA execution not run.",
                     f"case_id: {case_id}",
-                    f"working_case_dir: {working_case_dir}",
+                    f"case_dir: {case_dir}",
                     f"intended_command: {intended_cmd}",
                     "",
                 ]
@@ -95,8 +95,8 @@ def run_peda_step(
     else:
         raise ValueError(f"Unsupported PEDA mode: {mode}")
 
-    output_root_dir.mkdir(parents=True, exist_ok=True)
-    video_dir = output_root_dir / video_dir_name
+    case_dir.mkdir(parents=True, exist_ok=True)
+    video_dir = case_dir / video_dir_name
     if video_dir.exists():
         shutil.rmtree(video_dir, ignore_errors=True)
     shutil.copytree(peda_out_dir, video_dir)
@@ -107,10 +107,17 @@ def run_peda_step(
     )
     log.info("PEDA video cleanup removed %s .mat files.", mat_removed_count)
 
-    data_zip_path = output_root_dir / data_zip_name
+    data_zip_path = case_dir / data_zip_name
     _zip_dir_with_prefix(peda_out_dir, data_zip_path, peda_dir_name)
 
-    _cleanup_sqlite_sidecars(working_case_dir)
+    if (
+        peda_out_dir.exists()
+        and peda_out_dir.name == peda_dir_name
+        and peda_out_dir.resolve().parent == case_dir.resolve()
+    ):
+        shutil.rmtree(peda_out_dir, ignore_errors=True)
+
+    _cleanup_sqlite_sidecars(case_dir)
 
     return {
         "status": "stub" if mode == "stub" else "unknown",

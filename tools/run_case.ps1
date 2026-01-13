@@ -1,6 +1,6 @@
 # PURPOSE: Parse explicit paths from incoming.txt or prompt for case inputs, then run the controller.
 # INPUTS: incoming.txt (optional), case_num, out_root, mri_path, tdc_path, optional pdf_path and run_id.
-# OUTPUTS: Pipeline run with logs/manifest in repo logs/.
+# OUTPUTS: Pipeline run with logs/manifest in case_dir\run_logs.
 # NOTES: Accepts quoted Windows "Copy as path" strings.
 
 param(
@@ -11,7 +11,6 @@ param(
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
 $Controller = Join-Path $RepoRoot "src\controller.py"
-$LogDir = Join-Path $RepoRoot "logs"
 
 function Normalize-PathInput {
     param([string]$Value)
@@ -321,15 +320,17 @@ if ([string]::IsNullOrWhiteSpace($runId)) {
     $runId = $null
 }
 
+$LogDir = if ($caseDir) { Join-Path $caseDir "run_logs" } else { $null }
+
 $args = @(
     "--root", $outRoot,
     "--case", $caseNum,
     "--mri-input", $mriPath,
-    "--tdc-input", $tdcPath,
-    "--log-dir", $LogDir
+    "--tdc-input", $tdcPath
 )
 if ($pdfPath) { $args += @("--pdf-input", $pdfPath) }
 if ($runId) { $args += @("--run-id", $runId) }
+if ($LogDir) { $args += @("--log-dir", $LogDir) }
 
 Write-Host "Running: python $Controller $($args -join ' ')"
 & python $Controller @args

@@ -41,6 +41,7 @@ def run_self_test(*, keep_temp: bool = False) -> int:
         "misc": CANONICAL_LAYOUT["misc_dir_name"],
     }
     expected_root_dirs = set(layout_names.values())
+    expected_root_dirs.update({"annon_logs", "run_logs"})
 
     results: List[Dict[str, Any]] = []
     failures: List[str] = []
@@ -136,7 +137,10 @@ def run_self_test(*, keep_temp: bool = False) -> int:
                     )
                     combined = f"{proc.stdout}\n{proc.stderr}"
                     perm_manifest = (
-                        logs_dir / f"{case_num}__{perm_run_id}__manifest.json"
+                        out_root
+                        / case_num
+                        / "run_logs"
+                        / f"{case_num}__{perm_run_id}__manifest.json"
                     )
                     perm_result: Dict[str, Any] = {
                         "index": idx,

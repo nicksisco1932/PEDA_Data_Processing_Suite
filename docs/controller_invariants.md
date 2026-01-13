@@ -23,13 +23,18 @@ This document defines the behavioral invariants that `controller.py` must preser
 ## Output schema
 
 5. **Canonical case directory layout is invariant.**
-   Under the case directory, the controller must produce exactly these top-level output folders:
+   Under the case directory, the controller must produce these top-level output folders:
    - `<Case_ID> MR DICOM`
    - `<Case_ID> TDC Sessions`
    - `<Case_ID> Misc`
+   - `run_logs`
+   - `annon_logs`
+   If PEDA is enabled, these top-level artifacts are also allowed:
+   - `<Case_ID> PEDA<version>-Video`
+   - `<Case_ID> PEDA<version>-Data.zip`
 
 6. **No zip artifacts under outputs.**
-   - No `.zip` or `.zip.zip` files are permitted anywhere inside the canonical output tree.
+   - No `.zip` or `.zip.zip` files are permitted anywhere inside the canonical output tree, except the PEDA data zip when PEDA is enabled.
 
 7. **Output naming is canonical, not derived from input stems.**
    - Output folder names do not depend on input basenames.
