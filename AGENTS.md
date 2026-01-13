@@ -68,3 +68,32 @@ Notes
 - The pipeline must tolerate existing applog/Raw content in TDC Sessions.
 - On rerun, avoid overwriting existing session output; use suffixing behavior.
 - Preserve Windows path compatibility and prefer pathlib.
+
+### Canonical Case Layout (Post-Staging)
+
+After pipeline staging and normalization, agents may assume the following:
+
+<CaseID>\
+|-- Misc\
+|   |-- <Treatment Report PDF>
+|
+|-- MR DICOM\
+|   |-- <CaseID>_MRI.zip
+|
+|-- TDC Sessions\
+    |-- applog\
+    |   |-- <CaseID> Tdc.<YYYY_MM_DD>.log
+    |
+    |-- <Session_Name>\
+        |-- applog\
+        |   |-- Logs\
+        |-- Raw\
+
+Notes:
+- All TDC log files (.log or .txt) are consolidated into `TDC Sessions\applog\`.
+- Source directories (`Misc\Logs\`, `TDC Sessions\Logs\`) are removed during staging.
+- The copied log file is hash-verified (SHA-256) against the source prior to removal.
+- Agents must not expect log files outside `TDC Sessions\applog\`.
+
+Invariant:
+Agents must treat `TDC Sessions\applog\` as the sole authoritative location for TDC logs.

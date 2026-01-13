@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 import MRI_proc
 import TDC_proc
+from src.pipeline_steps.applog_step import install_tdc_log
 from src.logutil import (
     init_logger,
     StatusManager,
@@ -396,6 +397,10 @@ def run_pipeline(
                 "duration_s": 0.0,
                 "error": "skip_tdc",
             }
+
+    if not policy.dry_run and not policy.skip_tdc:
+        applog_summary = install_tdc_log(run_ctx["case_dir"], run_ctx["case"])
+        logger.info("TDC applog step: %s", applog_summary)
 
     with StepTimer(
         logger=logger,
